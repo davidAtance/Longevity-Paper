@@ -1,0 +1,1695 @@
+library(HMDHFDplus)
+library(forecast)
+library(demography)
+library(StMoMo)
+
+arg <- read.table("ARGENTINA.txt",header=TRUE)
+bra <- read.table("BRASIL.txt",header=TRUE)
+col <- read.table("COLOMBIA.txt",header=TRUE)
+cos <- read.table("COSTA RICA.txt",header=TRUE)
+cub <- read.table("CUBA.txt",header=TRUE)
+ecu <- read.table("ECUADOR.txt",header=TRUE)
+els <- read.table("EL SALVADOR.txt",header=TRUE)
+mex <- read.table("MEXICO.txt",header=TRUE)
+uru <- read.table("URUGUAY.txt",header=TRUE)
+ven <- read.table("VENEZUELA.txt",header=TRUE)
+  
+pob <- c("ARG", "BRA", "COL", "COS", "CUB", "ECU", "ELS", "MEX", "URU", "VEN")
+
+#Chile ----- CHL
+chl <- readHMDweb("CHL", "bltper_1x1", "david.atance@uah.es", "1460039341", fixup = TRUE)
+chl_male <- readHMDweb("CHL", "mltper_1x1", "david.atance@uah.es", "1460039341", fixup = TRUE)
+chl_female <- readHMDweb("CHL", "fltper_1x1", "david.atance@uah.es", "1460039341", fixup = TRUE)
+
+#Chile ----- CHL
+chl_exp <- readHMDweb("CHL", "Exposures_1x1", "david.atance@uah.es", "1460039341", fixup = TRUE)
+chl_dea <- readHMDweb("CHL", "Deaths_1x1", "david.atance@uah.es", "1460039341", fixup = TRUE)
+
+###############################################################################################
+#Una vez que ya tengo los datos de defunciones y poblaciones, 
+#voy a obtener las mxt correspondientes a cada país y sexo para toda la muestra
+#mxt = dx/Px
+#Y partir de ahí ya podre calcular las qxt
+#ARGENTINA
+mxt_arg_male <- arg$Deathsh/arg$Pobh
+mxt_arg_female <- arg$Deathsf/arg$Pobf
+mxt_arg_total <- (arg$Deathsh + arg$Deathsf)/(arg$Pobh + arg$Pobf)
+
+#BRASIL
+mxt_bra_male <- bra$Deathsh/bra$Pobh
+mxt_bra_female <- bra$Deathsf/bra$Pobf
+mxt_bra_total <- (bra$Deathsh + bra$Deathsf)/(bra$Pobh + bra$Pobf)
+
+#COLOMBIA
+mxt_col_male <- col$Deathsh/col$Pobh
+mxt_col_female <- col$Deathsf/col$Pobf
+mxt_col_total <- (col$Deathsh + col$Deathsf)/(col$Pobh + col$Pobf)
+
+#COSTA RICA
+mxt_cos_male <- cos$Deathsh/cos$Pobh
+mxt_cos_female <- cos$Deathsf/cos$Pobf
+mxt_cos_total <- (cos$Deathsh + cos$Deathsf)/(cos$Pobh + cos$Pobf)
+
+#CUBA
+mxt_cub_male <- cub$Deathsh/cub$Pobh
+mxt_cub_female <- cub$Deathsf/cub$Pobf
+mxt_cub_total <- (cub$Deathsh + cub$Deathsf)/(cub$Pobh + cub$Pobf)
+
+#ECUADOR 
+mxt_ecu_male <- ecu$Deathsh/ecu$Pobh
+mxt_ecu_female <- ecu$Deathsf/ecu$Pobf
+mxt_ecu_total <- (ecu$Deathsh + ecu$Deathsf)/(ecu$Pobh + ecu$Pobf)
+
+#ELSALVADOR
+mxt_els_male <- els$Deathsh/els$Pobh
+mxt_els_female <- els$Deathsf/els$Pobf
+mxt_els_total <- (els$Deathsh + els$Deathsf)/(els$Pobh + els$Pobf)
+
+#MEXICO
+mxt_mex_male <- mex$Deathsh/mex$Pobh
+mxt_mex_female <- mex$Deathsf/mex$Pobf
+mxt_mex_total <- (mex$Deathsh + mex$Deathsf)/(mex$Pobh + mex$Pobf)
+
+#URUGUAY
+mxt_uru_male <- uru$Deathsh/uru$Pobh
+mxt_uru_female <- uru$Deathsf/uru$Pobf
+mxt_uru_total <- (uru$Deathsh + uru$Deathsf)/(uru$Pobh + uru$Pobf)
+
+#VENEZUELA
+mxt_ven_male <- ven$Deathsh/ven$Pobh
+mxt_ven_female <- ven$Deathsf/ven$Pobf
+mxt_ven_total <- (ven$Deathsh + ven$Deathsf)/(ven$Pobh + ven$Pobf)
+
+#Voy a generar un vector con el valor de las ax, que se obtiene como 
+ax <- c(0.14, 1.25, rep(2.5,16), 6.05)
+n_dist <- c(1, 4, rep(5, 16), 15)
+
+##################################################################################
+#Ahora voy a calcular las qxt de cada pais y sexo 
+
+#ARGENTINA
+ax_arg <- rep(ax, (max(arg$Periodo)-min(arg$Periodo)+1))
+n_arg <- rep(n_dist, (max(arg$Periodo)-min(arg$Periodo)+1))
+qxt_arg_male <- (n_arg*mxt_arg_male)/(1+(n_arg - ax_arg)*mxt_arg_male)
+qxt_arg_female <- (n_arg*mxt_arg_female)/(1+(n_arg - ax_arg)*mxt_arg_female)
+qxt_arg_total <- (n_arg*mxt_arg_total)/(1+(n_arg - ax_arg)*mxt_arg_total)
+
+#BRASIL
+ax_bra <- rep(ax, (max(bra$Periodo)-min(bra$Periodo)+1))
+n_bra <- rep(n_dist, (max(bra$Periodo)-min(bra$Periodo)+1))
+qxt_bra_male <- (n_bra*mxt_bra_male)/(1+(n_bra - ax_bra)*mxt_bra_male)
+qxt_bra_female <- (n_bra*mxt_bra_female)/(1+(n_bra - ax_bra)*mxt_bra_female)
+qxt_bra_total <- (n_bra*mxt_bra_total)/(1+(n_bra - ax_bra)*mxt_bra_total)
+
+#COLOMBIA
+ax_col <- rep(ax, (max(col$Periodo)-min(col$Periodo)+1))
+n_col <- rep(n_dist, (max(col$Periodo)-min(col$Periodo)+1))
+qxt_col_male <- (n_col*mxt_col_male)/(1+(n_col - ax_col)*mxt_col_male)
+qxt_col_female <- (n_col*mxt_col_female)/(1+(n_col - ax_col)*mxt_col_female)
+qxt_col_total <- (n_col*mxt_col_total)/(1+(n_col - ax_col)*mxt_col_total)
+
+#COSTA RICA
+ax_cos <- rep(ax, (max(cos$Periodo)-min(cos$Periodo)+1))
+n_cos <- rep(n_dist, (max(cos$Periodo)-min(cos$Periodo)+1))
+qxt_cos_male <- (n_cos*mxt_cos_male)/(1+(n_cos - ax_cos)*mxt_cos_male)
+qxt_cos_female <- (n_cos*mxt_cos_female)/(1+(n_cos - ax_cos)*mxt_cos_female)
+qxt_cos_total <- (n_cos*mxt_cos_total)/(1+(n_cos - ax_cos)*mxt_cos_total)
+
+#CUBA
+ax_cub <- rep(ax, (max(cub$Periodo)-min(cub$Periodo)+1))
+n_cub <- rep(n_dist, (max(cub$Periodo)-min(cub$Periodo)+1))
+qxt_cub_male <- (n_cub*mxt_cub_male)/(1+(n_cub - ax_cub)*mxt_cub_male)
+qxt_cub_female <- (n_cub*mxt_cub_female)/(1+(n_cub - ax_cub)*mxt_cub_female)
+qxt_cub_total <- (n_cub*mxt_cub_total)/(1+(n_cub - ax_cub)*mxt_cub_total)
+
+#ECUADOR 
+ax_ecu <- rep(ax, (max(ecu$Periodo)-min(ecu$Periodo)+1))
+n_ecu <- rep(n_dist, (max(ecu$Periodo)-min(ecu$Periodo)+1))
+qxt_ecu_male <- (n_ecu*mxt_ecu_male)/(1+(n_ecu - ax_ecu)*mxt_ecu_male)
+qxt_ecu_female <- (n_ecu*mxt_ecu_female)/(1+(n_ecu - ax_ecu)*mxt_ecu_female)
+qxt_ecu_total <- (n_ecu*mxt_ecu_total)/(1+(n_ecu - ax_ecu)*mxt_ecu_total)
+
+#ELSALVADOR
+ax_els <- rep(ax, (max(els$Periodo)-min(els$Periodo)+1))
+n_els <- rep(n_dist, (max(els$Periodo)-min(els$Periodo)+1))
+qxt_els_male <- (n_els*mxt_els_male)/(1+(n_els - ax_els)*mxt_els_male)
+qxt_els_female <- (n_els*mxt_els_female)/(1+(n_els - ax_els)*mxt_els_female)
+qxt_els_total <- (n_els*mxt_els_total)/(1+(n_els - ax_els)*mxt_els_total)
+
+#MEXICO
+ax_mex <- rep(ax, (max(mex$Periodo)-min(mex$Periodo)+1))
+n_mex <- rep(n_dist, (max(mex$Periodo)-min(mex$Periodo)+1))
+qxt_mex_male <- (n_mex*mxt_mex_male)/(1+(n_mex - ax_mex)*mxt_mex_male)
+qxt_mex_female <- (n_mex*mxt_mex_female)/(1+(n_mex - ax_mex)*mxt_mex_female)
+qxt_mex_total <- (n_mex*mxt_mex_total)/(1+(n_mex - ax_mex)*mxt_mex_total)
+
+#URUGUAY
+ax_uru <- rep(ax, (max(uru$Periodo)-min(uru$Periodo)+1))
+n_uru <- rep(n_dist, (max(uru$Periodo)-min(uru$Periodo)+1))
+qxt_uru_male <- (n_uru*mxt_uru_male)/(1+(n_uru - ax_uru)*mxt_uru_male)
+qxt_uru_female <- (n_uru*mxt_uru_female)/(1+(n_uru - ax_uru)*mxt_uru_female)
+qxt_uru_total <- (n_uru*mxt_uru_total)/(1+(n_uru - ax_uru)*mxt_uru_total)
+
+#VENEZUELA
+ax_ven <- rep(ax, (max(ven$Periodo)-min(ven$Periodo)+1))
+n_ven <- rep(n_dist, (max(ven$Periodo)-min(ven$Periodo)+1))
+qxt_ven_male <- (n_ven*mxt_ven_male)/(1+(n_ven - ax_ven)*mxt_ven_male)
+qxt_ven_female <- (n_ven*mxt_ven_female)/(1+(n_ven - ax_ven)*mxt_ven_female)
+qxt_ven_total <- (n_ven*mxt_ven_total)/(1+(n_ven - ax_ven)*mxt_ven_total)
+
+
+###############################
+#ARGENTINA 
+arg_m <- cbind.data.frame(Age = arg$Age, Year = arg$Periodo, Exp = arg$Pobh, Deaths = arg$Deathsh, qxt = qxt_arg_male, mxt = mxt_arg_male, ax = ax_arg, n = n_arg)
+arg_f <- cbind.data.frame(Age = arg$Age, Year = arg$Periodo, Exp = arg$Pobf, Deaths = arg$Deathsf, qxt = qxt_arg_female, mxt = mxt_arg_female, ax = ax_arg, n = n_arg)
+arg_t <- cbind.data.frame(Age = arg$Age, Year = arg$Periodo, Exp = (arg$Pobh + arg$Pobf), Deaths = (arg$Deathsh + arg$Deathsf), qxt = qxt_arg_total, mxt = mxt_arg_total, ax = ax_arg, n = n_arg)
+
+#BRASIL
+bra_m <- cbind.data.frame(Age = bra$Age, Year = bra$Periodo, Exp = bra$Pobh, Deaths = bra$Deathsh, qxt = qxt_bra_male, mxt = mxt_bra_male, ax = ax_bra, n = n_bra)
+bra_f <- cbind.data.frame(Age = bra$Age, Year = bra$Periodo, Exp = bra$Pobf, Deaths = bra$Deathsf, qxt = qxt_bra_female, mxt = mxt_bra_female, ax = ax_bra, n = n_bra)
+bra_t <- cbind.data.frame(Age = bra$Age, Year = bra$Periodo, Exp = (bra$Pobh + bra$Pobf), Deaths = (bra$Deathsh + bra$Deathsf), qxt = qxt_bra_total, mxt = mxt_bra_total, ax = ax_bra, n = n_bra)
+
+#COLOMBIA
+col_m <- cbind.data.frame(Age = col$Age, Year = col$Periodo, Exp = col$Pobh, Deaths = col$Deathsh, qxt = qxt_col_male, mxt = mxt_col_male, ax = ax_col, n = n_col)
+col_f <- cbind.data.frame(Age = col$Age, Year = col$Periodo, Exp = col$Pobf, Deaths = col$Deathsf, qxt = qxt_col_female, mxt = mxt_col_female, ax = ax_col, n = n_col)
+col_t <- cbind.data.frame(Age = col$Age, Year = col$Periodo, Exp = (col$Pobh + col$Pobf), Deaths = (col$Deathsh + col$Deathsf), qxt = qxt_col_total, mxt = mxt_col_total, ax = ax_col, n = n_col)
+
+#COSTA RICA
+cos_m <- cbind.data.frame(Age = cos$Age, Year = cos$Periodo, Exp = cos$Pobh, Deaths = cos$Deathsh, qxt = qxt_cos_male, mxt = mxt_cos_male, ax = ax_cos, n = n_cos)
+cos_f <- cbind.data.frame(Age = cos$Age, Year = cos$Periodo, Exp = cos$Pobf, Deaths = cos$Deathsf, qxt = qxt_cos_female, mxt = mxt_cos_female, ax = ax_cos, n = n_cos)
+cos_t <- cbind.data.frame(Age = cos$Age, Year = cos$Periodo, Exp = (cos$Pobh + cos$Pobf), Deaths = (cos$Deathsh + cos$Deathsf), qxt = qxt_cos_total, mxt = mxt_cos_total, ax = ax_cos, n = n_cos)
+
+#CUBA
+cub_m <- cbind.data.frame(Age = cub$Age, Year = cub$Periodo, Exp = cub$Pobh, Deaths = cub$Deathsh, qxt = qxt_cub_male, mxt = mxt_cub_male, ax = ax_cub, n = n_cub)
+cub_f <- cbind.data.frame(Age = cub$Age, Year = cub$Periodo, Exp = cub$Pobf, Deaths = cub$Deathsf, qxt = qxt_cub_female, mxt = mxt_cub_female, ax = ax_cub, n = n_cub)
+cub_t <- cbind.data.frame(Age = cub$Age, Year = cub$Periodo, Exp = (cub$Pobh + cub$Pobf), Deaths = (cub$Deathsh + cub$Deathsf), qxt = qxt_cub_total, mxt = mxt_cub_total, ax = ax_cub, n = n_cub)
+
+#ECUADOR 
+ecu_m <- cbind.data.frame(Age = ecu$Age, Year = ecu$Periodo, Exp = ecu$Pobh, Deaths = ecu$Deathsh, qxt = qxt_ecu_male, mxt = mxt_ecu_male, ax = ax_ecu, n = n_ecu)
+ecu_f <- cbind.data.frame(Age = ecu$Age, Year = ecu$Periodo, Exp = ecu$Pobf, Deaths = ecu$Deathsf, qxt = qxt_ecu_female, mxt = mxt_ecu_female, ax = ax_ecu, n = n_ecu)
+ecu_t <- cbind.data.frame(Age = ecu$Age, Year = ecu$Periodo, Exp = (ecu$Pobh + ecu$Pobf), Deaths = (ecu$Deathsh + ecu$Deathsf), qxt = qxt_ecu_total, mxt = mxt_ecu_total, ax = ax_ecu, n = n_ecu)
+
+#ELSALVADOR
+els_m <- cbind.data.frame(Age = els$Age, Year = els$Periodo, Exp = els$Pobh, Deaths = els$Deathsh, qxt = qxt_els_male, mxt = mxt_els_male, ax = ax_els, n = n_els)
+els_f <- cbind.data.frame(Age = els$Age, Year = els$Periodo, Exp = els$Pobf, Deaths = els$Deathsf, qxt = qxt_els_female, mxt = mxt_els_female, ax = ax_els, n = n_els)
+els_t <- cbind.data.frame(Age = els$Age, Year = els$Periodo, Exp = (els$Pobh + els$Pobf), Deaths = (els$Deathsh + els$Deathsf), qxt = qxt_els_total, mxt = mxt_els_total, ax = ax_els, n = n_els)
+
+#MEXICO
+mex_m <- cbind.data.frame(Age = mex$Age, Year = mex$Periodo, Exp = mex$Pobh, Deaths = mex$Deathsh, qxt = qxt_mex_male, mxt = mxt_mex_male, ax = ax_mex, n = n_mex)
+mex_f <- cbind.data.frame(Age = mex$Age, Year = mex$Periodo, Exp = mex$Pobf, Deaths = mex$Deathsf, qxt = qxt_mex_female, mxt = mxt_mex_female, ax = ax_mex, n = n_mex)
+mex_t <- cbind.data.frame(Age = mex$Age, Year = mex$Periodo, Exp = (mex$Pobh + mex$Pobf), Deaths = (mex$Deathsh + mex$Deathsf), qxt = qxt_mex_total, mxt = mxt_mex_total, ax = ax_mex, n = n_mex)
+
+#URUGUAY
+uru_m <- cbind.data.frame(Age = uru$Age, Year = uru$Periodo, Exp = uru$Pobh, Deaths = uru$Deathsh, qxt = qxt_uru_male, mxt = mxt_uru_male, ax = ax_uru, n = n_uru)
+uru_f <- cbind.data.frame(Age = uru$Age, Year = uru$Periodo, Exp = uru$Pobf, Deaths = uru$Deathsf, qxt = qxt_uru_female, mxt = mxt_uru_female, ax = ax_uru, n = n_uru)
+uru_t <- cbind.data.frame(Age = uru$Age, Year = uru$Periodo, Exp = (uru$Pobh + uru$Pobf), Deaths = (uru$Deathsh + uru$Deathsf), qxt = qxt_uru_total, mxt = mxt_uru_total, ax = ax_uru, n = n_uru)
+
+#VENEZUELA
+ven_m <- cbind.data.frame(Age = ven$Age, Year = ven$Periodo, Exp = ven$Pobh, Deaths = ven$Deathsh, qxt = qxt_ven_male, mxt = mxt_ven_male, ax = ax_ven, n = n_ven)
+ven_f <- cbind.data.frame(Age = ven$Age, Year = ven$Periodo, Exp = ven$Pobf, Deaths = ven$Deathsf, qxt = qxt_ven_female, mxt = mxt_ven_female, ax = ax_ven, n = n_ven)
+ven_t <- cbind.data.frame(Age = ven$Age, Year = ven$Periodo, Exp = (ven$Pobh + ven$Pobf), Deaths = (ven$Deathsh + ven$Deathsf), qxt = qxt_ven_total, mxt = mxt_ven_total, ax = ax_ven, n = n_ven)
+
+###############################################################################################
+###############################################################################################
+#Ahora necesito cuadrar los datos para que vayan desde 1989 hasta el último dato disponible
+
+#ARGENTINA 
+summary(arg_m)
+arg_m <- arg_m[arg_m$Year>1989,]
+arg_f <- arg_f[arg_f$Year>1989,]
+arg_t <- arg_t[arg_t$Year>1989,]
+arg_m <- arg_m[arg_m$Year<2019,]
+arg_f <- arg_f[arg_f$Year<2019,]
+arg_t <- arg_t[arg_t$Year<2019,]
+#Hay tasas de mortalidad mayores que uno, eso no puede ser 
+#Así que las mayores que 1 ---- las convierto en 1
+arg_m[arg_m$qxt>1,]$qxt <- 1
+arg_f[arg_f$qxt>1,]$qxt <- 1
+arg_t[arg_t$qxt>1,]$qxt <- 1
+head(arg_m)
+head(arg_f)
+head(arg_t)
+
+#BRASIL
+summary(bra_m)
+bra_m <- bra_m[bra_m$Year>1989,]
+bra_f <- bra_f[bra_f$Year>1989,]
+bra_t <- bra_t[bra_t$Year>1989,]
+bra_m <- bra_m[bra_m$Year<2019,]
+bra_f <- bra_f[bra_f$Year<2019,]
+bra_t <- bra_t[bra_t$Year<2019,]
+bra_m[bra_m$qxt>1,]$qxt <- 1
+bra_f[bra_f$qxt>1,]$qxt <- 1
+bra_t[bra_t$qxt>1,]$qxt <- 1
+head(bra_m)
+head(bra_f)
+head(bra_t)
+
+#COLOMBIA
+summary(col_m)
+col_m <- col_m[col_m$Year>1989,]
+col_f <- col_f[col_f$Year>1989,]
+col_t <- col_t[col_t$Year>1989,]
+col_m <- col_m[col_m$Year<2019,]
+col_f <- col_f[col_f$Year<2019,]
+col_t <- col_t[col_t$Year<2019,]
+col_m[col_m$qxt>1,]$qxt <- 1
+col_f[col_f$qxt>1,]$qxt <- 1
+col_t[col_t$qxt>1,]$qxt <- 1
+head(col_m)
+head(col_f)
+head(col_t)
+
+#COSTA RICA
+summary(cos_m)
+cos_m <- cos_m[cos_m$Year>1989,]
+cos_f <- cos_f[cos_f$Year>1989,]
+cos_t <- cos_t[cos_t$Year>1989,]
+cos_m <- cos_m[cos_m$Year<2019,]
+cos_f <- cos_f[cos_f$Year<2019,]
+cos_t <- cos_t[cos_t$Year<2019,]
+cos_m[cos_m$qxt>1,]$qxt <- 1
+cos_f[cos_f$qxt>1,]$qxt <- 1
+cos_t[cos_t$qxt>1,]$qxt <- 1
+head(cos_m)
+head(cos_f)
+head(cos_t)
+
+#CUBA
+summary(cub_m)
+cub_m <- cub_m[cub_m$Year>1989,]
+cub_f <- cub_f[cub_f$Year>1989,]
+cub_t <- cub_t[cub_t$Year>1989,]
+cub_m <- cub_m[cub_m$Year<2019,]
+cub_f <- cub_f[cub_f$Year<2019,]
+cub_t <- cub_t[cub_t$Year<2019,]
+cub_m[cub_m$qxt>1,]$qxt <- 1
+cub_f[cub_f$qxt>1,]$qxt <- 1
+cub_t[cub_t$qxt>1,]$qxt <- 1
+head(cub_m)
+head(cub_f)
+head(cub_t)
+
+#ECUADOR 
+summary(ecu_m)
+ecu_m <- ecu_m[ecu_m$Year>1989,]
+ecu_f <- ecu_f[ecu_f$Year>1989,]
+ecu_t <- ecu_t[ecu_t$Year>1989,]
+ecu_m <- ecu_m[ecu_m$Year<2019,]
+ecu_f <- ecu_f[ecu_f$Year<2019,]
+ecu_t <- ecu_t[ecu_t$Year<2019,]
+ecu_m[ecu_m$qxt>1,]$qxt <- 1
+ecu_f[ecu_f$qxt>1,]$qxt <- 1
+ecu_t[ecu_t$qxt>1,]$qxt <- 1
+head(ecu_m)
+head(ecu_f)
+head(ecu_t)
+
+#ELSALVADOR
+summary(els_m)
+els_m <- els_m[els_m$Year>1989,]
+els_f <- els_f[els_f$Year>1989,]
+els_t <- els_t[els_t$Year>1989,]
+els_m <- els_m[els_m$Year<2019,]
+els_f <- els_f[els_f$Year<2019,]
+els_t <- els_t[els_t$Year<2019,]
+els_m[els_m$qxt>1,]$qxt <- 1
+els_f[els_f$qxt>1,]$qxt <- 1
+els_t[els_t$qxt>1,]$qxt <- 1
+head(els_m)
+head(els_f)
+head(els_t)
+
+#MEXICO
+summary(mex_m)
+mex_m <- mex_m[mex_m$Year>1989,]
+mex_f <- mex_f[mex_f$Year>1989,]
+mex_t <- mex_t[mex_t$Year>1989,]
+mex_m <- mex_m[mex_m$Year<2019,]
+mex_f <- mex_f[mex_f$Year<2019,]
+mex_t <- mex_t[mex_t$Year<2019,]
+mex_m[mex_m$qxt>1,]$qxt <- 1
+mex_f[mex_f$qxt>1,]$qxt <- 1
+mex_t[mex_t$qxt>1,]$qxt <- 1
+head(mex_m)
+head(mex_f)
+head(mex_t)
+
+#URUGUAY
+summary(uru_m)
+uru_m <- uru_m[uru_m$Year>1989,]
+uru_f <- uru_f[uru_f$Year>1989,]
+uru_t <- uru_t[uru_t$Year>1989,]
+uru_m <- uru_m[uru_m$Year<2019,]
+uru_f <- uru_f[uru_f$Year<2019,]
+uru_t <- uru_t[uru_t$Year<2019,]
+uru_m[uru_m$qxt>1,]$qxt <- 1
+uru_f[uru_f$qxt>1,]$qxt <- 1
+uru_t[uru_t$qxt>1,]$qxt <- 1
+head(uru_m)
+head(uru_f)
+head(uru_t)
+
+#VENEZUELA
+summary(ven_m)
+ven_m <- ven_m[ven_m$Year>1989,]
+ven_f <- ven_f[ven_f$Year>1989,]
+ven_t <- ven_t[ven_t$Year>1989,]
+ven_m <- ven_m[ven_m$Year<2019,]
+ven_f <- ven_f[ven_f$Year<2019,]
+ven_t <- ven_t[ven_t$Year<2019,]
+ven_m[ven_m$qxt>1,]$qxt <- 1
+ven_f[ven_f$qxt>1,]$qxt <- 1
+ven_t[ven_t$qxt>1,]$qxt <- 1
+head(ven_m)
+head(ven_f)
+head(ven_t)
+
+#Aqui pueden aparecer errores que son fruto de que no existen valores de qxt mayores de 1
+
+################################################################################################
+
+paises <- list()
+#Ahora voy a crear una lista que guarde todos los datos 
+pob
+
+paises <- list(ARG = list(hombres = arg_m, mujeres = arg_f, total = arg_t), 
+               BRA = list(hombres = bra_m, mujeres = bra_f, total = bra_t),
+               COL = list(hombres = col_m, mujeres = col_f, total = col_t),
+               COS = list(hombres = cos_m, mujeres = cos_f, total = cos_t),
+               CUB = list(hombres = cub_m, mujeres = cub_f, total = cub_t),
+               ECU = list(hombres = ecu_m, mujeres = ecu_f, total = ecu_t),
+               ELS = list(hombres = els_m, mujeres = els_f, total = els_t),
+               MEX = list(hombres = mex_m, mujeres = mex_f, total = mex_t),
+               URU = list(hombres = uru_m, mujeres = uru_f, total = uru_t),
+               VEN = list(hombres = ven_m, mujeres = ven_f, total = ven_t))
+
+#Ahora voy a generar los datos en forma de matriz para que sean más fáciles de extraer
+datos_mat <- list()
+edades <- c(0,1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85)
+
+sex <- c("hombres", "mujeres", "total")
+for(i in 1:10){
+  for(j in 1:3){
+  ages <- edades
+  nages <- length(ages)
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$Exp <- matrix(paises[[i]][[j]]$Exp, nages, nyears, dimnames = list(ages, years))
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$dxt <- matrix(paises[[i]][[j]]$Deaths , nages, nyears, dimnames = list(ages, years))
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$qxt <- matrix(paises[[i]][[j]]$qxt, nages, nyears, dimnames = list(ages, years))
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$mxt <- matrix(paises[[i]][[j]]$mxt, nages, nyears, dimnames = list(ages, years))
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$ax <- matrix(paises[[i]][[j]]$ax, nages, nyears, dimnames = list(ages, years))
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$n <- matrix(paises[[i]][[j]]$n, nages, nyears, dimnames = list(ages, years))
+  }
+}
+
+#Voy a guardar los datos de las poblaciones para que los podamos utilizar, si hay que generar gráficos o lo que sea 
+#dimelo y los apaño
+save(datos_mat, paises, file = "datosmuestra.RData")
+
+#Ahora una vez que tengo los datos voy a proceder a obtener las distintas tablas de vida, que me permitan sacar 
+#las distintas medidas que necesitamos, para ello desarrollo una función 
+
+x = edades
+lifetable = datos_mat$REP$hombres$qxt[,1]
+ax= datos_mat$REP$hombres$ax[,1] 
+n_edad = datos_mat$REP$hombres$n[,1]
+mx = datos_mat$REP$hombres$mxt[,1]
+#para generar la tabla de mortalidad 
+tablamort <- function(x, lifetable, ax, n_edad, mx){ 
+  lx <- vector("numeric", length(lifetable) )
+  dx <- vector("numeric", length(lifetable) )
+  Lx <- vector("numeric", length(lifetable) )
+  Tx <- vector("numeric", length(lifetable))
+  ex <- vector("numeric", length(lifetable) )
+  ax_ <- ax
+  lx[1] <- 100000 #contiene lx de la edad cero
+  for(i in 1: (length(lifetable) - 1)) {lx[i+1]<-lx[i]*(1-lifetable[i])}
+  for(i in 1: (length(lifetable))) {dx[i] <- lx[i]*lifetable[i]}
+  for(i in 1: (length(lifetable)-1)) {Lx[i] <- lx[i+1]*n_edad[i]+ax_[i]*dx[i]
+  Lx[length(lifetable)]= lx[length(lifetable)] / mx[length(lifetable)]}                       
+  for(i in 1: (length(x))) {Tx[i]<-sum(Lx[i:length(lifetable)])}
+  for(i in 1: (length(x))) {ex[i]<-Tx[i]/lx[i]} 
+  # lx[x+1] contiene lx de la edad x
+  devuelve<-cbind(x=x,lx=lx,dx=dx,qx=lifetable,ex=ex, ax=ax_, Lx=Lx, Tx=Tx)          
+  devuelve
+}
+
+#Ahora creo la tabla de mortalidad para todos los países y sexos
+tablas_mort <- list()
+for(i in 1:10){
+  ages <- edades
+  nages <- length(ages)
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  tabla_hombres <- NULL
+  tabla_mujeres <- NULL
+  tabla_total <- NULL
+     for(h in 1:nyears){
+       any <- rep(minyear + h - 1, nages)
+       tablaauxh <- cbind(any, tablamort(x = ages, lifetable = datos_mat[[i]]$hombres$qxt[,h], 
+                                         ax = datos_mat[[i]]$hombres$ax[,h], n_edad = datos_mat[[i]]$hombres$n[,h],
+                                         mx = datos_mat[[i]]$hombres$mxt[,h]))
+       tablaauxm <- cbind(any, tablamort(x = ages, lifetable = datos_mat[[i]]$mujeres$qxt[,h], 
+                                         ax = datos_mat[[i]]$mujeres$ax[,h], n_edad = datos_mat[[i]]$mujeres$n[,h],
+                                         mx = datos_mat[[i]]$mujeres$mxt[,h]))
+       tablaatot <- cbind(any, tablamort(x = ages, lifetable = datos_mat[[i]]$total$qxt[,h], 
+                                         ax = datos_mat[[i]]$total$ax[,h], n_edad = datos_mat[[i]]$total$n[,h],
+                                         mx = datos_mat[[i]]$total$mxt[,h]))
+       
+       tabla_hombres <- rbind(tabla_hombres, tablaauxh)
+       tabla_mujeres <- rbind(tabla_mujeres, tablaauxm)
+       tabla_total <- rbind(tabla_total, tablaatot)
+     }
+  tablas_mort[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombres
+  tablas_mort[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujeres
+  tablas_mort[[paste0(pob[i])]][[paste0("total")]] <- tabla_total
+}
+
+#Ahora voy a recoger los calculos de la esperanza que me interesan que son x=0; 65; 70; 75   
+esperanzas.dm <- list()
+for(i in 1:10){
+  #i <- 1
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  esperanzas.dm[[paste0(pob[i])]]$e0 <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  esperanzas.dm[[paste0(pob[i])]]$e65 <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  esperanzas.dm[[paste0(pob[i])]]$e70 <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  esperanzas.dm[[paste0(pob[i])]]$e75 <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  for(j in 1: nyears){
+    esperanzas.dm[[i]]$e0[j, 1] <- tablas_mort[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.dm[[i]]$e0[j, 2] <- tablas_mort[[i]]$mujeres[(1+19*(j-1)),6]
+    esperanzas.dm[[i]]$e0[j, 3] <- tablas_mort[[i]]$total[(1+19*(j-1)),6]
+  
+    esperanzas.dm[[i]]$e65[j, 1] <- tablas_mort[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.dm[[i]]$e65[j, 2] <- tablas_mort[[i]]$mujeres[(15+19*(j-1)),6]
+    esperanzas.dm[[i]]$e65[j, 3] <- tablas_mort[[i]]$total[(15+19*(j-1)),6]
+
+    esperanzas.dm[[i]]$e70[j, 1] <- tablas_mort[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.dm[[i]]$e70[j, 2] <- tablas_mort[[i]]$mujeres[(16+19*(j-1)),6]
+    esperanzas.dm[[i]]$e70[j, 3] <- tablas_mort[[i]]$total[(16+19*(j-1)),6]
+  
+    esperanzas.dm[[i]]$e75[j, 1] <- tablas_mort[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.dm[[i]]$e75[j, 2] <- tablas_mort[[i]]$mujeres[(17+19*(j-1)),6]
+    esperanzas.dm[[i]]$e75[j, 3] <- tablas_mort[[i]]$total[(17+19*(j-1)),6]
+  }
+}
+
+capture.output(esperanzas.dm, file = "Esperanzasdm.txt")
+
+#DENTRO DE MUESTRA
+#También necesito una serie de indicadores más que son: 
+#Edad modal de muerte 
+#Esperanza de vida en 0, 65, 70, 75 (calculado ya)
+#Probabilidad de llegar vivo a los 65, 70 y 75
+#Coeficiente de Gini 
+#Desviacion estandar condicionada y Edad horizonte
+
+#EDAD MODAL
+edad_modal_DM <- list()
+int_edades <- c("<1", "1-5", "6-10", "11-15", "16-20", "21-25", "26-30", "31-35",
+                "36-40", "41-45", "46-50", "51-55", "56-60", "61-65", "66-70",
+                "71-75", "76-80", "81-85", ">85")
+
+for(i in 1:10){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  nages <- length(int_edades)
+  edad_int <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  ed_modal <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  for(h in 1:nyears){
+    ed_modal[h,1] <- which(datos_mat[[i]]$hombres$dxt[(5:nages),h] == max(datos_mat[[i]]$hombres$dxt[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal[h,2] <- which(datos_mat[[i]]$mujeres$dxt[(5:nages),h] == max(datos_mat[[i]]$mujeres$dxt[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal[h,3] <- which(datos_mat[[i]]$total$dxt[(5:nages),h] == max(datos_mat[[i]]$total$dxt[(5:nages),h]), arr.ind=TRUE)[1]
+    
+    edad_int[h,1] <- edades[(ed_modal[h,1]+4)]
+    edad_int[h,2] <- edades[(ed_modal[h,2]+4)]
+    edad_int[h,3] <- edades[(ed_modal[h,3]+4)]
+  }
+  edad_modal_DM[[paste0(pob[i])]] <- edad_int
+}
+capture.output(edad_modal_DM, file = "EdadModal_DM.txt")
+int_edades
+#INDICE GINI 
+edad_media <- c(0.5, 3, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 
+                58, 63, 68, 73, 78, 83, 93)
+igini<-function(lifetable){ 
+  lx <- vector("numeric",length(lifetable) )
+  dx <- vector("numeric",length(lifetable) )
+  Ni0 <- vector("numeric",length(lifetable) )
+  Yi0 <- vector("numeric",length(lifetable) )
+  Gi0 <- vector("numeric", length(lifetable) )
+  Ni65 <- vector("numeric",length(5) )
+  Yi65 <- vector("numeric",length(5) )
+  Gi65 <- vector("numeric", length(5))
+  Ni70 <- vector("numeric",length(4) )
+  Yi70 <- vector("numeric",length(4) )
+  Gi70 <- vector("numeric", length(4))
+  Ni75 <- vector("numeric",length(3) )
+  Yi75 <- vector("numeric",length(3) )
+  Gi75 <- vector("numeric", length(3))
+  lx[1]<-100000 #contiene lx de la edad cero
+  for(i in 1: (length(lifetable)-1)) {lx[i+1]<-lx[i]*(1-lifetable[i])}
+  for(i in 1: (length(lifetable))) {dx[i]<-lx[i]*lifetable[i]}
+  #Para cada edad 0, 65, 70 y 75 necesito 
+  #0
+  for(i in 1: (length(lifetable))){ Ni0[i] <- sum(dx[1:i])/sum(dx)}
+  for(i in 1: (length(lifetable))){ Yi0[i] <- sum((dx[1:i]*edad_media[1:i]))/sum((dx*edad_media))}
+  Gi0[1] <- Ni0[1] * Yi0[1]
+  for(i in 2: (length(lifetable))){ Gi0[i] <- (Ni0[i]-Ni0[i-1])*(Yi0[i-1]+Yi0[i])}  
+  
+  #65
+  for(i in 1: 5){ Ni65[i] <- sum(dx[15:(14+i)])/sum(dx[15:length(lifetable)])}
+  for(i in 1: 5){ Yi65[i] <- sum((dx[15:(14+i)]*edad_media[15:(14+i)]))/sum((dx[15:length(lifetable)]*edad_media[15:length(lifetable)]))}
+  Gi65[1] <- Ni65[1] * Yi65[1]
+  for(i in 2: 5){ Gi65[i] <- (Ni65[i]-Ni65[i-1])*(Yi65[i-1]+Yi65[i])}  
+  
+  #70
+  for(i in 1: 4){ Ni70[i] <- sum(dx[16:(15+i)])/sum(dx[16:length(lifetable)])}
+  for(i in 1: 4){ Yi70[i] <- sum((dx[16:(15+i)]*edad_media[16:(15+i)]))/sum((dx[16:length(lifetable)]*edad_media[16:length(lifetable)]))}
+  Gi70[1] <- Ni70[1] * Yi70[1]
+  for(i in 2: 4){ Gi70[i] <- (Ni70[i]-Ni70[i-1])*(Yi70[i-1]+Yi70[i])}  
+  
+  #75
+  for(i in 1: 3){ Ni75[i] <- sum(dx[17:(16+i)])/sum(dx[17:length(lifetable)])}
+  for(i in 1: 3){ Yi75[i] <- sum((dx[17:(16+i)]*edad_media[17:(16+i)]))/sum((dx[17:length(lifetable)]*edad_media[17:length(lifetable)]))}
+  Gi75[1] <- Ni75[1] * Yi75[1]
+  for(i in 2: 3){ Gi75[i] <- (Ni75[i]-Ni75[i-1])*(Yi75[i-1]+Yi75[i])}  
+
+  result<-list(gini0=abs(1-sum(Gi0)), gini65=abs(1-sum(Gi65)),
+               gini70=abs(1-sum(Gi70)), gini75=abs(1-sum(Gi75)))
+  result
+}
+
+#Para hacer el indice de Gini igual que con la edad modal pero con el índice de Gini
+gini.index_DM <- list()
+tabl <- c("G0hombres", "G0mujeres", "G0total", "G65hombres", "G65mujeres", "G65total",
+          "G60hombres", "G60mujeres", "G60total", "G75hombres", "G75mujeres", "G75total")
+
+for(i in 1:10){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  nages <- length(edades)
+  index.gin <- matrix(NA, nyears, 12, dimnames = list(years, tabl))
+  hombres <- mujeres <- total <- NULL
+  for(h in 1:nyears){
+    hombres <- igini(lifetable = datos_mat[[i]]$hombres$qxt[,h])
+    mujeres <- igini(lifetable = datos_mat[[i]]$mujeres$qxt[,h])
+    total <- igini(lifetable = datos_mat[[i]]$total$qxt[,h])
+    index.gin[h, 1] <- hombres$gini0        
+    index.gin[h, 2] <- mujeres$gini0        
+    index.gin[h, 3] <- total$gini0        
+    index.gin[h, 4] <- hombres$gini65        
+    index.gin[h, 5] <- mujeres$gini65        
+    index.gin[h, 6] <- total$gini65        
+    index.gin[h, 7] <- hombres$gini70        
+    index.gin[h, 8] <- mujeres$gini70        
+    index.gin[h, 9] <- total$gini70
+    index.gin[h, 10] <- hombres$gini75        
+    index.gin[h, 11] <- mujeres$gini75        
+    index.gin[h, 12] <- total$gini75        
+    }
+gini.index_DM[[paste0(pob[i])]] <- index.gin  
+}
+  
+capture.output(gini.index_DM, file = "Index.Gini.DM.txt")
+
+##########################################################################################
+#Ahora voy a proceder a la a calcular p65=l65/l0; p70=l70/l0; p75=l75/l0
+Pob.ll.vivo <- function(qx){ 
+  lx<- vector("numeric",length(lifetable) )
+  lx[1]<-100000 #contiene lx de la edad cero
+  for(i in 1: (length(qx)-1)) {lx[i+1]<-lx[i]*(1-qx[i])}
+  result <- list(p65 = lx[15]/lx[1], p70 = lx[16]/lx[1], p75 = lx[17]/lx[1])
+  }
+
+pob.llegarvivo_DM <- list()
+tabl.vivo <- c("p65hombres", "p65mujeres", "p65total", 
+               "p70hombres", "p70mujeres", "p70total", 
+               "p75hombres", "p75mujeres", "p75total")
+for(i in 1:10){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  nages <- length(edades)
+  pobvivo <- matrix(NA, nyears, 9, dimnames = list(years, tabl.vivo))
+  hombres <- mujeres <- total <- NULL
+  for(h in 1:nyears){
+    hombres <- Pob.ll.vivo(qx = datos_mat[[i]]$hombres$qxt[,h])
+    mujeres <- Pob.ll.vivo(qx = datos_mat[[i]]$mujeres$qxt[,h])
+    total <- Pob.ll.vivo(qx = datos_mat[[i]]$total$qxt[,h])
+    pobvivo[h, 1] <- hombres$p65        
+    pobvivo[h, 2] <- mujeres$p65        
+    pobvivo[h, 3] <- total$p65        
+    pobvivo[h, 4] <- hombres$p70        
+    pobvivo[h, 5] <- mujeres$p70        
+    pobvivo[h, 6] <- total$p70        
+    pobvivo[h, 7] <- hombres$p75        
+    pobvivo[h, 8] <- mujeres$p75        
+    pobvivo[h, 9] <- total$p75
+  }
+  pob.llegarvivo_DM[[paste0(pob[i])]] <- pobvivo  
+}
+capture.output(pob.llegarvivo_DM, file = "Pobllvivo.DM.txt")
+
+##########################################################################################
+##########################################################################################
+#Conditional Standard deviation 
+x <- edades
+qx <- datos_mat[[i]]$hombres$qxt[,1]
+ax <- paises[[i]]$hombres$ax[1:19]
+mx <- datos_mat[[i]]$hombres$mxt[,1]
+n_edad <- datos_mat[[i]]$hombres$n[,1]
+edad_media
+csdev <- function(qx, ax, mx){
+  lx <- vector("numeric", length(qx) )
+  dx <- vector("numeric", length(qx) )
+  Lx <- vector("numeric", length(qx) )
+  Tx <- vector("numeric", length(qx))
+  ex <- vector("numeric", length(qx) )
+  ax_ <- vector("numeric", length(qx))
+  Mx_ <- vector("numeric", length(qx))
+  ax_ <- ax
+  lx[1] <- 100000 #contiene lx de la edad cero
+  for(i in 1: (length(qx) - 1)) {lx[i+1]<-lx[i]*(1-qx[i])}
+  for(i in 1: (length(qx))) {dx[i] <- lx[i]*qx[i]}
+  for(i in 1: (length(qx)-1)) {Lx[i] <- lx[i+1]*n_edad[i]+ax_[i]*dx[i]
+  Lx[length(qx)]= lx[length(qx)] / mx[length(qx)]}                       
+  for(i in 1: (length(qx))) {Tx[i]<-sum(Lx[i:length(qx)])}
+  for(i in 1: (length(qx))) {ex[i]<-Tx[i]/lx[i]} 
+  # lx[x+1] contiene lx de la edad x
+  Mx0 <- ex[1] + edad_media[1]
+  Mx65 <- ex[15] + edad_media[15]
+  Mx70 <- ex[16] + edad_media[16]
+  Mx75 <- ex[17] + edad_media[17]
+  Sx0 <-  sqrt(sum(dx*(edad_media+ax-Mx0)^2)/lx[1])
+  Sx65 <-  sqrt(sum(dx[15:19]*(edad_media[15:19]+ax[15:19]-Mx65)^2)/lx[15])
+  Sx70 <-  sqrt(sum(dx[16:19]*(edad_media[16:19]+ax[16:19]-Mx70)^2)/lx[16])
+  Sx75 <-  sqrt(sum(dx[17:19]*(edad_media[17:19]+ax[17:19]-Mx75)^2)/lx[17])
+  devuelve<-list(s0 = Sx0, s65 = Sx65, s70 = Sx70, s75 = Sx75)
+  devuelve
+}
+
+
+con.std.des_DM <- list()
+tabl.std <- c("s0hombres", "s0mujeres", "s0total", 
+               "s65hombres", "s65mujeres", "s65total", 
+               "s70hombres", "s70mujeres", "s70total", 
+               "s75hombres", "s75mujeres", "s75total")
+for(i in 1:10){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  nages <- length(edades)
+  std.des <- matrix(NA, nyears, 12, dimnames = list(years, tabl.std))
+  hombres <- mujeres <- total <- NULL
+  for(h in 1:nyears){
+    hombres <- csdev(qx = datos_mat[[i]]$hombres$qxt[,h], ax = datos_mat[[i]]$hombres$ax[,h],
+                     mx = datos_mat[[i]]$hombres$mxt[,h])
+    mujeres <- csdev(qx = datos_mat[[i]]$mujeres$qxt[,h], ax = datos_mat[[i]]$mujeres$ax[,h],
+                     mx = datos_mat[[i]]$mujeres$mxt[,h])
+    total <- csdev(qx = datos_mat[[i]]$total$qxt[,h], ax = datos_mat[[i]]$total$ax[,h],
+                     mx = datos_mat[[i]]$total$mxt[,h])
+    std.des[h, 1] <- hombres$s0        
+    std.des[h, 2] <- mujeres$s0        
+    std.des[h, 3] <- total$s0        
+    std.des[h, 4] <- hombres$s65        
+    std.des[h, 5] <- mujeres$s65        
+    std.des[h, 6] <- total$s65        
+    std.des[h, 7] <- hombres$s70        
+    std.des[h, 8] <- mujeres$s70        
+    std.des[h, 9] <- total$s70
+    std.des[h, 10] <- hombres$s75        
+    std.des[h, 11] <- mujeres$s75        
+    std.des[h, 12] <- total$s75
+    }
+  con.std.des_DM[[paste0(pob[i])]] <- std.des  
+}
+capture.output(con.std.des_DM, file = "ConStdDesvi.DM.txt")
+
+##########################################################################################
+##########################################################################################
+#Por último vamos a proceder a calcular Life Preparancy
+#Edad de preparación para la vida 
+Age <- edades
+qxt <- datos_mat[[i]]$hombres$qxt[,h]
+x <- 0
+z <- 0.5
+Life_preparancy <- function(qxt, x, z){
+  lx <- vector("numeric", length(qxt) )
+  lx[1] <- 100000 #contiene lx de la edad cero
+  for(t in 1: (length(qxt) - 1)) {lx[t+1]<-lx[t]*(1-qxt[t])}
+  ny <- sum(edades <= x)
+  lxz <- lx[ny]*(1-z)
+  xg <- sum(lx > lxz) - 1
+  xs <- 19 - sum(lx < lxz)
+  d1 <- lx[(xg+1)] - lxz
+  d2 <- lxz - lx[(xs+1)]
+  d2[is.na(d2)] <- 0
+  d <- d1 + d2
+  if(xg == 0){
+    yupi = 0 } else{yupi = edad_media[xg]}
+  hxz <- (d1/d)*edad_media[xs] + (d2/d)*yupi
+  hxz 
+}
+#Ahora una vez que tenemos este valor vamos a proceder a calcular esta variable para todos los paises y sexos 
+Eprep.vida_DM <- list()
+tabl.vida <- c("hage0.50%_hombres", "hage0.50%_mujeres", "hage0.50%_total", 
+               "hage65.25%_hombres", "hage65.25%_mujeres", "hage65.25%_total")
+for(i in 1:10){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  prep.vid <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vida))
+  hombres1 <- mujeres1 <- total1 <- NULL
+  hombres2 <- mujeres2 <- total2 <- NULL
+  for(h in 1:nyears){
+    hombres1 <- Life_preparancy(qxt = datos_mat[[i]]$hombres$qxt[,h],
+                                x = 0, z = 0.5)
+    hombres2 <- Life_preparancy(qxt = datos_mat[[i]]$hombres$qxt[,h],
+                                x = 65, z = 0.25)
+    mujeres1 <- Life_preparancy(qxt = datos_mat[[i]]$mujeres$qxt[,h],
+                                x = 0, z = 0.5)
+    mujeres2 <- Life_preparancy(qxt = datos_mat[[i]]$mujeres$qxt[,h],
+                                x = 65, z = 0.25)
+    total1 <- Life_preparancy(qxt = datos_mat[[i]]$total$qxt[,h],
+                                x = 0, z = 0.5)
+    total2 <- Life_preparancy(qxt = datos_mat[[i]]$total$qxt[,h],
+                                x = 65, z = 0.25)
+    prep.vid[h, 1] <- hombres1        
+    prep.vid[h, 2] <- mujeres1        
+    prep.vid[h, 3] <- total1        
+    prep.vid[h, 4] <- hombres2        
+    prep.vid[h, 5] <- mujeres2        
+    prep.vid[h, 6] <- total2        
+      }
+  Eprep.vida_DM[[paste0(pob[i])]] <- prep.vid  
+}
+capture.output(Eprep.vida_DM, file = "EdadPrepVida.DM.txt")
+
+#Ahora voy a guardar los indicadores dentro de muestra en un archivo de R
+save(esperanzas.dm, edad_modal_DM, gini.index_DM, pob.llegarvivo_DM, 
+     con.std.des_DM, Eprep.vida_DM, 
+     file = "indicadores_DM.RData")
+
+##########################################################################################
+#PROYECTAR QXT
+##########################################################################################
+library(StMoMo)
+#####################################################
+###########  LC-UNIFACTORIAL ########################
+#####################################################
+constLC <- function(ax, bx, kt, b0x, gc, wxt, ages){
+  c1 <- mean(kt[1, ], na.rm = TRUE)
+  c2 <- sum(bx[, 1], na.rm = TRUE)
+  list(ax = ax + c1 * bx, bx = bx / c2, kt =  c2 * (kt - c1))  
+}
+
+funcion.predict<-function(t,n,ax,bx,kt,lo){
+  #numero de a?os para los que queremos predicciones
+  #numero de edades para las que se predice 
+  #calculo de las predicciones 
+  lee <- matrix(rep(ax,t), nrow=n, ncol= t) + (matrix(bx, nrow=n, ncol= 1)%*%matrix(kt, nrow=1, ncol= t))
+  if(lo==1){ predicciones<-inv.logit(lee) }
+  else{ predicciones <- exp(lee) }
+  prueba <- list(pred=predicciones)
+  prueba
+}
+inv.logit<-function(x){exp(x)/(1+exp(x))}
+
+
+#Voy a crear un par de listas, una para el ajuste dentro de muestra y otra para la proyeccion fuera de muestra,
+#que contienen los valores de qxt de cada poblacion
+library(gnm)
+LCfit <- list()
+LCfut_mean <- list()
+LCfut_low <- list()
+LCfut_high <- list()
+
+for(j in 1:10){
+  for(i in 1:3){
+    nages <- length(edad_media)
+    minyear <- min(paises[[j]][[i]]$Year)
+    maxyear <- max(paises[[j]][[i]]$Year)
+    years <- c(minyear:maxyear)
+    nyears <- length(years)
+    wxt_LC <- genWeightMat(ages = nages, years = years, clip = 0)
+    
+    model <- gnm(paises[[j]][[i]]$qxt ~ - 1 + factor(paises[[j]][[i]]$Age),
+                 weights = paises[[j]][[i]]$Exp, family=quasibinomial, data = paises[[j]][[i]])
+    
+    biplotStart <- residSVD(model, factor(paises[[j]][[i]]$Age), factor(paises[[j]][[i]]$Year),1)
+
+    ainih <- coef(model)+biplotStart[1]*biplotStart[20]*biplotStart[1:19]/biplotStart[1]  
+    binih <- biplotStart[1:19]/biplotStart[1]
+    kinih <- biplotStart[1]*biplotStart[20:(nyears+nages)]-biplotStart[1]*biplotStart[20]
+
+    lc1 <- gnm(paises[[j]][[i]]$qxt ~ - 1 + factor(paises[[j]][[i]]$Age) + Mult(factor(paises[[j]][[i]]$Age), factor(paises[[j]][[i]]$Year)), 
+                      weights = paises[[j]][[i]]$Exp, constrain= c(20, 39), constrainTo=c(1,0)
+                      ,family=quasibinomial, data = paises[[j]][[i]], start=c(ainih, binih, kinih))
+
+    ax <- as.numeric(coef(lc1)[1:19]+mean(c(0,coef(lc1)[40:(2*nages + nyears)])*sum(c(1,coef(lc1)[21:38])))*c(1,coef(lc1)[21:38])/sum(c(1,coef(lc1)[21:38])))
+    bx <- as.numeric(c(1,coef(lc1)[21:38])/sum(c(1,coef(lc1)[21:38])))
+    kt <- as.numeric(c(0,coef(lc1)[40:(2*nages + nyears)])*sum(c(1,coef(lc1)[21:38]))-mean(c(0,coef(lc1)[40:(2*nages + nyears)])*sum(c(1,coef(lc1)[21:38]))))
+
+    ktfut_mean <- forecast(auto.arima(kt), (2030-maxyear))$mean[1:(2030-maxyear)]
+    ktfut_high <- forecast(auto.arima(kt), (2030-maxyear))$upper[1:(2030-maxyear),2]
+    ktfut_low <- forecast(auto.arima(kt), (2030-maxyear))$lower[1:(2030-maxyear),2]
+    
+    qx_LC <- funcion.predict(nyears, nages, ax, bx, kt, 1)$pred
+    qxfut_LC_mean <- funcion.predict((2030-maxyear), nages, ax, bx, ktfut_mean, 1)$pred
+    qxfut_LC_high <- funcion.predict((2030-maxyear), nages, ax, bx, ktfut_high, 1)$pred
+    qxfut_LC_low <- funcion.predict((2030-maxyear), nages, ax, bx, ktfut_low, 1)$pred
+    
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$ax <- ax
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$bx <- bx
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- kt
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCdm <- matrix(qx_LC, ncol=nyears, nrow=nages, dimnames = list(edades, years))
+    LCfut_mean[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- ktfut_mean
+    LCfut_mean[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCfm <- matrix(qxfut_LC_mean, ncol=(2030-maxyear), nrow=nages, dimnames = list(edades, c((maxyear+1):2030)))
+    LCfut_high[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- ktfut_high
+    LCfut_high[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCfm <- matrix(qxfut_LC_high, ncol=(2030-maxyear), nrow=nages, dimnames = list(edades, c((maxyear+1):2030)))
+    LCfut_low[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- ktfut_low
+    LCfut_low[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCfm <- matrix(qxfut_LC_low, ncol=(2030-maxyear), nrow=nages, dimnames = list(edades, c((maxyear+1):2030)))
+    
+  }}
+
+#Salen 3 warnings que corresponden a que el gnm no ha conseguido obtener una solucion optima
+#pero no pasa nada, es normal 
+save(LCfit, LCfut_mean, LCfut_high, LCfut_low, 
+     file = "AjusteLC+qxtDM_y_FM+Intervalos.RData")
+
+library(scatterplot3d)
+library(rgl)
+
+#Voy a mostrar gráficamente las superficies de todo los países y sexos para certificar que todo esta correcto 
+j <- 10
+plot3d(edades, seq(min(paises[[j]][[1]]$Year), max(paises[[j]][[1]]$Year), by=1), log(LCfit[[j]][[1]]$qxtLCdm), col="red", type="n", zlab = "log(qxt)",ylab = "t=periodo",xlab = "edad = x")
+surface3d(edades, seq(min(paises[[j]][[1]]$Year), max(paises[[j]][[3]]$Year), by=1), log(LCfit[[j]][[1]]$qxtLCdm), col="blue")
+surface3d(edades, seq(min(paises[[j]][[2]]$Year), max(paises[[j]][[2]]$Year), by=1), log(LCfit[[j]][[2]]$qxtLCdm), col="red")
+surface3d(edades, seq(min(paises[[j]][[3]]$Year), max(paises[[j]][[1]]$Year), by=1), log(LCfit[[j]][[3]]$qxtLCdm), col="yellow")
+
+#Ahora vamos a ver las proyecciones
+################################################################################################################
+#Los datos de argentina para la población total 
+LCfut_mean$ARG$total$qxtLCfm[is.nan(LCfut_mean$ARG$total$qxtLCfm)] <- 1
+
+#COMPROBAR que no hay qxt = 0
+#ARGENTINA
+sum(is.nan(LCfut_mean$ARG$total$qxtLCfm))
+sum(is.nan(LCfut_mean$ARG$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$ARG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$ARG$total$qxtLCfm))
+sum(is.nan(LCfut_high$ARG$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$ARG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$ARG$total$qxtLCfm))
+sum(is.nan(LCfut_low$ARG$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$ARG$mujeres$qxtLCfm))
+
+LCfut_mean$ARG$total$qxtLCfm[is.nan(LCfut_mean$ARG$total$qxtLCfm)] <- 1
+LCfut_high$ARG$total$qxtLCfm[is.nan(LCfut_high$ARG$total$qxtLCfm)] <- 1
+LCfut_low$ARG$total$qxtLCfm[is.nan(LCfut_low$ARG$total$qxtLCfm)] <- 1
+LCfut_high$ARG$mujeres$qxtLCfm[is.nan(LCfut_high$ARG$mujeres$qxtLCfm)] <- 1
+
+pob
+#BRASIL 
+sum(is.nan(LCfut_mean$BRA$total$qxtLCfm))
+sum(is.nan(LCfut_mean$BRA$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$BRA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$BRA$total$qxtLCfm))
+sum(is.nan(LCfut_high$BRA$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$BRA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$BRA$total$qxtLCfm))
+sum(is.nan(LCfut_low$BRA$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$BRA$mujeres$qxtLCfm))
+
+#COLOMBIA 
+sum(is.nan(LCfut_mean$COL$total$qxtLCfm))
+sum(is.nan(LCfut_mean$COL$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$COL$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$COL$total$qxtLCfm))
+sum(is.nan(LCfut_high$COL$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$COL$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$COL$total$qxtLCfm))
+sum(is.nan(LCfut_low$COL$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$COL$mujeres$qxtLCfm))
+
+
+#COSTA RICA 
+sum(is.nan(LCfut_mean$COS$total$qxtLCfm))
+sum(is.nan(LCfut_mean$COS$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$COS$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$COS$total$qxtLCfm))
+sum(is.nan(LCfut_high$COS$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$COS$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$COS$total$qxtLCfm))
+sum(is.nan(LCfut_low$COS$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$COS$mujeres$qxtLCfm))
+
+#CUBA 
+sum(is.nan(LCfut_mean$CUB$total$qxtLCfm))
+sum(is.nan(LCfut_mean$CUB$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$CUB$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$CUB$total$qxtLCfm))
+sum(is.nan(LCfut_high$CUB$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$CUB$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$CUB$total$qxtLCfm))
+sum(is.nan(LCfut_low$CUB$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$CUB$mujeres$qxtLCfm))
+
+#ECUADOR 
+sum(is.nan(LCfut_mean$ECU$total$qxtLCfm))
+sum(is.nan(LCfut_mean$ECU$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$ECU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$ECU$total$qxtLCfm))
+sum(is.nan(LCfut_high$ECU$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$ECU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$ECU$total$qxtLCfm))
+sum(is.nan(LCfut_low$ECU$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$ECU$mujeres$qxtLCfm))
+
+#EL SALVADOR  
+sum(is.nan(LCfut_mean$ELS$total$qxtLCfm))
+sum(is.nan(LCfut_mean$ELS$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$ELS$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$ELS$total$qxtLCfm))
+sum(is.nan(LCfut_high$ELS$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$ELS$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$ELS$total$qxtLCfm))
+sum(is.nan(LCfut_low$ELS$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$ELS$mujeres$qxtLCfm))
+
+#MEXICO 
+sum(is.nan(LCfut_mean$MEX$total$qxtLCfm))
+sum(is.nan(LCfut_mean$MEX$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$MEX$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$MEX$total$qxtLCfm))
+sum(is.nan(LCfut_high$MEX$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$MEX$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$MEX$total$qxtLCfm))
+sum(is.nan(LCfut_low$MEX$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$MEX$mujeres$qxtLCfm))
+
+#URUGUAY 
+sum(is.nan(LCfut_mean$URU$total$qxtLCfm))
+sum(is.nan(LCfut_mean$URU$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$URU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$URU$total$qxtLCfm))
+sum(is.nan(LCfut_high$URU$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$URU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$URU$total$qxtLCfm))
+sum(is.nan(LCfut_low$URU$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$URU$mujeres$qxtLCfm))
+
+#VENEZUELA
+sum(is.nan(LCfut_mean$VEN$total$qxtLCfm))
+sum(is.nan(LCfut_mean$VEN$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$VEN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$VEN$total$qxtLCfm))
+sum(is.nan(LCfut_high$VEN$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$VEN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$VEN$total$qxtLCfm))
+sum(is.nan(LCfut_low$VEN$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$VEN$mujeres$qxtLCfm))
+
+
+LCfut_mean$ARG$hombres$qxtLCfm[19,] <- 1
+LCfut_mean$ARG$mujeres$qxtLCfm[19,]
+LCfut_mean$ARG$total$qxtLCfm[19,]
+
+LCfut_high$ARG$hombres$qxtLCfm[19,] <- 1
+LCfut_high$ARG$mujeres$qxtLCfm[19,]
+LCfut_high$ARG$total$qxtLCfm[19,]
+
+LCfut_low$ARG$hombres$qxtLCfm[19,] <- 1
+LCfut_low$ARG$mujeres$qxtLCfm[19,] <- 1
+LCfut_low$ARG$total$qxtLCfm[19,]
+
+
+################################################################################################################
+#Ahora una vez que tengo las qxt proyectadas ya puedo calcular el resto de la tabla de mortalidad para los 
+#valores futuros de qxt 
+tablas_mort_proyectada <- list()
+tablas_mort_proyectada_low <- list()
+tablas_mort_proyectada_high <- list()
+for(i in 1:10){
+  ages <- edades
+  nages <- length(ages)
+  minyear_dm <- min(paises[[i]]$hombres$Year)
+  maxyear_dm <- max(paises[[i]]$hombres$Year)
+  years_dm <- c(minyear_dm:maxyear_dm)
+  minyear_fm <- max(paises[[i]]$hombres$Year) + 1
+  nyears_dm <- length(years_dm)
+  maxyear_fm <- 2030
+  years_fm <- c(minyear_fm:maxyear_fm)
+  nyears_fm <- length(years_fm)
+  tabla_hombres <- tabla_mujeres <- tabla_total <- NULL
+  tabla_hombreshig <- tabla_mujereshig <- tabla_totalhig <- NULL
+  tabla_hombreslow <- tabla_mujereslow <- tabla_totallow <- NULL
+  mxt_fue_hom <- mxt_fue_muj <- mxt_fue_tot <- NULL
+  mxt_fue_hom.low <- mxt_fue_muj.low <- mxt_fue_tot.low <- NULL
+  mxt_fue_hom.high <- mxt_fue_muj.high <- mxt_fue_tot.high <- NULL
+  for(h in 1:nyears_fm){
+    any <- rep(minyear_fm + h - 1, nages)
+    mxt_fue_hom <- matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$hombres$n[,nyears_dm] - matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$hombres$n[,nyears_dm]-datos_mat[[i]]$hombres$ax[,nyears_dm]))
+    
+    mxt_fue_muj <- matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$mujeres$n[,nyears_dm] - matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$mujeres$n[,nyears_dm]-datos_mat[[i]]$mujeres$ax[,nyears_dm]))
+    mxt_fue_tot <- matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$total$n[,nyears_dm] - matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$total$n[,nyears_dm]-datos_mat[[i]]$total$ax[,nyears_dm]))
+    #mean
+    tablaauxh <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$hombres$ax[,nyears_dm], n_edad = datos_mat[[i]]$hombres$n[,nyears_dm],
+                                      mx = mxt_fue_hom))
+    tablaauxm <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$mujeres$ax[,nyears_dm], n_edad = datos_mat[[i]]$mujeres$n[,nyears_dm],
+                                      mx = mxt_fue_muj))
+    tablaatot <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$total$ax[,nyears_dm], n_edad = datos_mat[[i]]$total$n[,nyears_dm],
+                                      mx = mxt_fue_tot))
+    
+    tabla_hombres <- rbind(tabla_hombres, tablaauxh)
+    tabla_mujeres <- rbind(tabla_mujeres, tablaauxm)
+    tabla_total <- rbind(tabla_total, tablaatot)
+    #high
+    mxt_fue_hom.high <- matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$hombres$n[,nyears_dm] - matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$hombres$n[,nyears_dm]-datos_mat[[i]]$hombres$ax[,nyears_dm]))
+    mxt_fue_muj.high <- matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$mujeres$n[,nyears_dm] - matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$mujeres$n[,nyears_dm]-datos_mat[[i]]$mujeres$ax[,nyears_dm]))
+    mxt_fue_tot.high <- matrix(LCfut_high[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$total$n[,nyears_dm] - matrix(LCfut_high[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$total$n[,nyears_dm]-datos_mat[[i]]$total$ax[,nyears_dm]))
+    #mean
+    tabla_ahhig <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$hombres$ax[,nyears_dm], n_edad = datos_mat[[i]]$hombres$n[,nyears_dm],
+                                      mx = mxt_fue_hom.high))
+    tabla_muhig <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$mujeres$ax[,nyears_dm], n_edad = datos_mat[[i]]$mujeres$n[,nyears_dm],
+                                      mx = mxt_fue_muj.high))
+    tabla_tohig <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_high[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$total$ax[,nyears_dm], n_edad = datos_mat[[i]]$total$n[,nyears_dm],
+                                      mx = mxt_fue_tot.high))
+    
+    tabla_hombreshig <- rbind(tabla_hombreshig, tabla_ahhig)
+    tabla_mujereshig <- rbind(tabla_mujereshig, tabla_muhig)
+    tabla_totalhig <- rbind(tabla_totalhig, tabla_tohig)
+    #low
+    mxt_fue_hom.low <- matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$hombres$n[,nyears_dm] - matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$hombres$n[,nyears_dm]-datos_mat[[i]]$hombres$ax[,nyears_dm]))
+    mxt_fue_muj.low <- matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$mujeres$n[,nyears_dm] - matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$mujeres$n[,nyears_dm]-datos_mat[[i]]$mujeres$ax[,nyears_dm]))
+    mxt_fue_tot.low <- matrix(LCfut_low[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$total$n[,nyears_dm] - matrix(LCfut_low[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$total$n[,nyears_dm]-datos_mat[[i]]$total$ax[,nyears_dm]))
+    #mean
+    tabla_hlow <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$hombres$ax[,nyears_dm], n_edad = datos_mat[[i]]$hombres$n[,nyears_dm],
+                                      mx = mxt_fue_hom.low))
+    tabla_mlow <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$mujeres$ax[,nyears_dm], n_edad = datos_mat[[i]]$mujeres$n[,nyears_dm],
+                                      mx = mxt_fue_muj.low))
+    tabla_tllow <- cbind(any, tablamort(x = ages, lifetable = matrix(LCfut_low[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$total$ax[,nyears_dm], n_edad = datos_mat[[i]]$total$n[,nyears_dm],
+                                      mx = mxt_fue_tot.low))
+    
+    tabla_hombreslow <- rbind(tabla_hombreslow, tabla_hlow)
+    tabla_mujereslow <- rbind(tabla_mujereslow, tabla_mlow)
+    tabla_totallow <- rbind(tabla_totallow, tabla_tllow)
+    
+  }
+  tablas_mort_proyectada[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombres
+  tablas_mort_proyectada[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujeres
+  tablas_mort_proyectada[[paste0(pob[i])]][[paste0("total")]] <- tabla_total
+  #HIGH
+  tablas_mort_proyectada_high[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombreshig
+  tablas_mort_proyectada_high[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujereshig
+  tablas_mort_proyectada_high[[paste0(pob[i])]][[paste0("total")]] <- tabla_totalhig
+  #LOW
+  tablas_mort_proyectada_low[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombreslow
+  tablas_mort_proyectada_low[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujereslow
+  tablas_mort_proyectada_low[[paste0(pob[i])]][[paste0("total")]] <- tabla_totallow
+}
+
+#Ahora voy a pasarlo a los resultados que me interesan 
+#Ahora voy a recoger los calculos de la esperanza que me interesan que son x=0; 65; 70; 75   
+esperanzas.fm <- list()
+esperanzas.fm_low <- list()
+esperanzas.fm_hig <- list()
+tabla.esperanzas <- c("e0hombres", "e0mujeres", "e0total",
+                      "e65hombres", "e65mujeres", "e65total",
+                      "e70hombres", "e70mujeres", "e70total",
+                      "e75hombres", "e75mujeres", "e75total")
+
+for(i in 1:10){
+  maxyear <- max(paises[[i]]$hombres$Year) + 1
+  years <- c(maxyear:2030)
+  nyears <- length(years)
+  esperanzas.fm[[paste0(pob[i])]] <- matrix(NA, nyears, 12, dimnames = list(years, tabla.esperanzas))
+  esperanzas.fm_hig[[paste0(pob[i])]] <- matrix(NA, nyears, 12, dimnames = list(years, tabla.esperanzas))
+  esperanzas.fm_low[[paste0(pob[i])]] <- matrix(NA, nyears, 12, dimnames = list(years, tabla.esperanzas))
+  for(j in 1: nyears){
+    esperanzas.fm[[i]][j, 1] <- tablas_mort_proyectada[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 2] <- tablas_mort_proyectada[[i]]$mujeres[(1+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 3] <- tablas_mort_proyectada[[i]]$total[(1+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 4] <- tablas_mort_proyectada[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 5] <- tablas_mort_proyectada[[i]]$mujeres[(15+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 6] <- tablas_mort_proyectada[[i]]$total[(15+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 7] <- tablas_mort_proyectada[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 8] <- tablas_mort_proyectada[[i]]$mujeres[(16+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 9] <- tablas_mort_proyectada[[i]]$total[(16+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 10] <- tablas_mort_proyectada[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 11] <- tablas_mort_proyectada[[i]]$mujeres[(17+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 12] <- tablas_mort_proyectada[[i]]$total[(17+19*(j-1)),6]
+    #HIGH
+    esperanzas.fm_hig[[i]][j, 1] <- tablas_mort_proyectada_high[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 2] <- tablas_mort_proyectada_high[[i]]$mujeres[(1+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 3] <- tablas_mort_proyectada_high[[i]]$total[(1+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 4] <- tablas_mort_proyectada_high[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 5] <- tablas_mort_proyectada_high[[i]]$mujeres[(15+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 6] <- tablas_mort_proyectada_high[[i]]$total[(15+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 7] <- tablas_mort_proyectada_high[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 8] <- tablas_mort_proyectada_high[[i]]$mujeres[(16+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 9] <- tablas_mort_proyectada_high[[i]]$total[(16+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 10] <- tablas_mort_proyectada_high[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 11] <- tablas_mort_proyectada_high[[i]]$mujeres[(17+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 12] <- tablas_mort_proyectada_high[[i]]$total[(17+19*(j-1)),6]
+    #LOW
+    esperanzas.fm_low[[i]][j, 1] <- tablas_mort_proyectada_low[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 2] <- tablas_mort_proyectada_low[[i]]$mujeres[(1+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 3] <- tablas_mort_proyectada_low[[i]]$total[(1+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 4] <- tablas_mort_proyectada_low[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 5] <- tablas_mort_proyectada_low[[i]]$mujeres[(15+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 6] <- tablas_mort_proyectada_low[[i]]$total[(15+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 7] <- tablas_mort_proyectada_low[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 8] <- tablas_mort_proyectada_low[[i]]$mujeres[(16+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 9] <- tablas_mort_proyectada_low[[i]]$total[(16+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 10] <- tablas_mort_proyectada_low[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 11] <- tablas_mort_proyectada_low[[i]]$mujeres[(17+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 12] <- tablas_mort_proyectada_low[[i]]$total[(17+19*(j-1)),6]
+    }
+}
+
+capture.output(esperanzas.fm, file = "Esperanzasfm.txt")
+capture.output(esperanzas.fm_hig, file = "Esperanzasfm_hig.txt")
+capture.output(esperanzas.fm_low, file = "Esperanzasfm_low.txt")
+
+########################################################################################################
+########################################################################################################
+
+#EDAD MODAL fuera de muestra
+#Primero voy a transformar el data.frame de las dxt de la tabla de mortalidad en una matriz 
+#Ahora voy a generar los datos en forma de matriz para que sean más fáciles de extraer
+#Ya aprovecho y transformo todas las variables
+int_edades
+datos_mat_fm <- list()
+datos_mat_fm_high <- list()
+datos_mat_fm_low <- list()
+for(i in 1:10){
+  for(j in 1:3){
+    ages <- edades
+    nages <- length(ages)
+    minyear <- max(paises[[i]]$hombres$Year) + 1 
+    maxyear <- 2030
+    years <- c(minyear:maxyear)
+    nyears <- length(years)
+    #mean
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$lx <- matrix(tablas_mort_proyectada[[i]][[j]][,3], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$dx <- matrix(tablas_mort_proyectada[[i]][[j]][,4], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$qx <- matrix(tablas_mort_proyectada[[i]][[j]][,5], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$ex <- matrix(tablas_mort_proyectada[[i]][[j]][,6], nages, nyears, dimnames = list(ages, years))
+    #high
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$lx <- matrix(tablas_mort_proyectada_high[[i]][[j]][,3], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$dx <- matrix(tablas_mort_proyectada_high[[i]][[j]][,4], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$qx <- matrix(tablas_mort_proyectada_high[[i]][[j]][,5], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$ex <- matrix(tablas_mort_proyectada_low[[i]][[j]][,6], nages, nyears, dimnames = list(ages, years))
+    #mean
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$lx <- matrix(tablas_mort_proyectada_low[[i]][[j]][,3], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$dx <- matrix(tablas_mort_proyectada_low[[i]][[j]][,4], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$qx <- matrix(tablas_mort_proyectada_low[[i]][[j]][,5], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$ex <- matrix(tablas_mort_proyectada_low[[i]][[j]][,6], nages, nyears, dimnames = list(ages, years))
+    
+  }
+}
+
+int_edades
+edad_modal_fm <- list()
+edad_modal_fm_low <- list()
+edad_modal_fm_high <- list()
+for(i in 1:10){
+  minyear <- max(paises[[i]]$hombres$Year) + 1
+  maxyear <- 2030
+  years <- c(minyear:maxyear)
+  nyears <- length(years)
+  nages <- length(edades)
+  ed_modal <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  ed_modal_low <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  ed_modal_high <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  ed_int <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  ed_int_low <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  ed_int_high <- matrix(NA, nyears, 3, dimnames = list(years, sex))
+  for(h in 1:nyears){
+    ed_modal[h,1] <- which(datos_mat_fm[[i]]$hombres$dx[(5:nages),h] == max(datos_mat_fm[[i]]$hombres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal[h,2] <- which(datos_mat_fm[[i]]$mujeres$dx[(5:nages),h] == max(datos_mat_fm[[i]]$mujeres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal[h,3] <- which(datos_mat_fm[[i]]$total$dx[(5:nages),h] == max(datos_mat_fm[[i]]$total$dx[(5:nages),h]), arr.ind=TRUE)[1]
+
+    ed_int[h,1] <- edades[(ed_modal[h,1]+4)]
+    ed_int[h,2] <- edades[(ed_modal[h,2]+4)]
+    ed_int[h,3] <- edades[(ed_modal[h,3]+4)]
+    
+    #LOW
+    ed_modal_low[h,1] <- which(datos_mat_fm_low[[i]]$hombres$dx[(5:nages),h] == max(datos_mat_fm_low[[i]]$hombres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal_low[h,2] <- which(datos_mat_fm_low[[i]]$mujeres$dx[(5:nages),h] == max(datos_mat_fm_low[[i]]$mujeres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal_low[h,3] <- which(datos_mat_fm_low[[i]]$total$dx[(5:nages),h] == max(datos_mat_fm_low[[i]]$total$dx[(5:nages),h]), arr.ind=TRUE)[1]
+
+    ed_int_low[h,1] <- edades[(ed_modal_low[h,1]+4)]
+    ed_int_low[h,2] <- edades[(ed_modal_low[h,2]+4)]
+    ed_int_low[h,3] <- edades[(ed_modal_low[h,3]+4)]
+    
+    #HIGH
+    ed_modal_high[h,1] <- which(datos_mat_fm_high[[i]]$hombres$dx[(5:nages),h] == max(datos_mat_fm_high[[i]]$hombres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal_high[h,2] <- which(datos_mat_fm_high[[i]]$mujeres$dx[(5:nages),h] == max(datos_mat_fm_high[[i]]$mujeres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal_high[h,3] <- which(datos_mat_fm_high[[i]]$total$dx[(5:nages),h] == max(datos_mat_fm_high[[i]]$total$dx[(5:nages),h]), arr.ind=TRUE)[1]
+
+    ed_int_high[h,1] <- edades[(ed_modal_high[h,1]+4)]
+    ed_int_high[h,2] <- edades[(ed_modal_high[h,2]+4)]
+    ed_int_high[h,3] <- edades[(ed_modal_high[h,3]+4)]
+
+}
+  edad_modal_fm[[paste0(pob[i])]] <- ed_int
+  edad_modal_fm_low[[paste0(pob[i])]] <- ed_int_low
+  edad_modal_fm_high[[paste0(pob[i])]] <- ed_int_high
+}
+
+capture.output(edad_modal_fm, file = "edad_modal_fm.txt")
+capture.output(edad_modal_fm_high, file = "edad_modal_fm_high.txt")
+capture.output(edad_modal_fm_low, file = "edad_modal_fm_low.txt")
+
+###################################################################################################
+###################################################################################################
+#Ahora vamos con el Indice de Gini fuera de muestra
+gini.index_FM <- list()
+gini.index_FM.low <- list()
+gini.index_FM.high <- list()
+tabl <- c("G0hombres", "G0mujeres", "G0total", "G65hombres", "G65mujeres", "G65total",
+          "G60hombres", "G60mujeres", "G60total", "G75hombres", "G75mujeres", "G75total")
+i <- 1
+for(i in 1:10){
+  maxyear <- max(paises[[i]]$hombres$Year) + 1
+  years <- c(maxyear:2030)
+  nyears_fm <- length(years)
+  nyears_dm <- length(c(min(paises[[i]]$hombres$Year):(max(paises[[i]]$hombres$Year))))
+  nages <- length(edades)
+  index.gin <- matrix(NA, nyears_fm, 12, dimnames = list(years, tabl))
+  index.gin.low <- matrix(NA, nyears_fm, 12, dimnames = list(years, tabl))
+  index.gin.high <- matrix(NA, nyears_fm, 12, dimnames = list(years, tabl))
+  hombres <-  mujeres <- total <- NULL
+  hombres.low <- mujeres.low <- total.low <- NULL
+  hombres.high <- mujeres.high <- total.high <- NULL
+  for(h in 1:nyears_fm){
+    #MEAN
+    hombres <- igini(lifetable = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    mujeres <- igini(lifetable = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    total <- igini(lifetable = matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    index.gin[h, 1] <- hombres$gini0        
+    index.gin[h, 2] <- mujeres$gini0        
+    index.gin[h, 3] <- total$gini0        
+    index.gin[h, 4] <- hombres$gini65        
+    index.gin[h, 5] <- mujeres$gini65        
+    index.gin[h, 6] <- total$gini65        
+    index.gin[h, 7] <- hombres$gini70        
+    index.gin[h, 8] <- mujeres$gini70        
+    index.gin[h, 9] <- total$gini70
+    index.gin[h, 10] <- hombres$gini75        
+    index.gin[h, 11] <- mujeres$gini75        
+    index.gin[h, 12] <- total$gini75        
+    #LOW
+    hombres.low <- igini(lifetable = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    mujeres.low <- igini(lifetable = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    total.low <- igini(lifetable = matrix(LCfut_low[[i]]$total$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    index.gin.low[h, 1] <- hombres.low$gini0        
+    index.gin.low[h, 2] <- mujeres.low$gini0        
+    index.gin.low[h, 3] <- total.low$gini0        
+    index.gin.low[h, 4] <- hombres.low$gini65        
+    index.gin.low[h, 5] <- mujeres.low$gini65        
+    index.gin.low[h, 6] <- total.low$gini65        
+    index.gin.low[h, 7] <- hombres.low$gini70        
+    index.gin.low[h, 8] <- mujeres.low$gini70        
+    index.gin.low[h, 9] <- total.low$gini70
+    index.gin.low[h, 10] <- hombres.low$gini75        
+    index.gin.low[h, 11] <- mujeres.low$gini75        
+    index.gin.low[h, 12] <- total.low$gini75        
+    #HIGH
+    hombres.high <- igini(lifetable = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    mujeres.high <- igini(lifetable = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    total.high <- igini(lifetable = matrix(LCfut_high[[i]]$total$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    index.gin.high[h, 1] <- hombres.high$gini0        
+    index.gin.high[h, 2] <- mujeres.high$gini0        
+    index.gin.high[h, 3] <- total.high$gini0        
+    index.gin.high[h, 4] <- hombres.high$gini65        
+    index.gin.high[h, 5] <- mujeres.high$gini65        
+    index.gin.high[h, 6] <- total.high$gini65        
+    index.gin.high[h, 7] <- hombres.high$gini70        
+    index.gin.high[h, 8] <- mujeres.high$gini70        
+    index.gin.high[h, 9] <- total.high$gini70
+    index.gin.high[h, 10] <- hombres.high$gini75        
+    index.gin.high[h, 11] <- mujeres.high$gini75        
+    index.gin.high[h, 12] <- total.high$gini75        
+    
+  }
+  gini.index_FM[[paste0(pob[i])]] <- index.gin  
+  gini.index_FM.low[[paste0(pob[i])]] <- index.gin.low  
+  gini.index_FM.high[[paste0(pob[i])]] <- index.gin.high  
+}
+
+capture.output(gini.index_FM, file = "Index.Gini.FM.txt")
+capture.output(gini.index_FM.low, file = "Index.Gini.FM.low.txt")
+capture.output(gini.index_FM.high, file = "Index.Gini.FM.high.txt")
+
+##########################################################################################
+##########################################################################################
+#Ahora voy a proceder a la a calcular p65=l65/l0; p70=l70/l0; p75=l75/l0
+pob.llegarvivo_FM <- list()
+pob.llegarvivo_FM.low <- list()
+pob.llegarvivo_FM.high <- list()
+tabl.vivo <- c("p65hombres", "p65mujeres", "p65total", 
+               "p70hombres", "p70mujeres", "p70total", 
+               "p75hombres", "p75mujeres", "p75total")
+for(i in 1:10){
+  maxyear <- max(paises[[i]]$hombres$Year) + 1
+  years <- c(maxyear:2030)
+  nyears <- length(years)
+  nages <- length(edades)
+  pobvivo <- matrix(NA, nyears, 9, dimnames = list(years, tabl.vivo))
+  pobvivo.low <- matrix(NA, nyears, 9, dimnames = list(years, tabl.vivo))
+  pobvivo.high <- matrix(NA, nyears, 9, dimnames = list(years, tabl.vivo))
+  hombres <- mujeres <-  total <- NULL
+  hombres.low <- mujeres.low <- total.low <- NULL
+  hombres.high <- mujeres.high <- total.high <- NULL
+  for(h in 1:nyears){
+    #Mean
+    hombres <- Pob.ll.vivo(qx = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol = nyears, nrow = nages)[,h])
+    mujeres <- Pob.ll.vivo(qx = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    total <- Pob.ll.vivo(qx = matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    pobvivo[h, 1] <- hombres$p65        
+    pobvivo[h, 2] <- mujeres$p65        
+    pobvivo[h, 3] <- total$p65        
+    pobvivo[h, 4] <- hombres$p70        
+    pobvivo[h, 5] <- mujeres$p70        
+    pobvivo[h, 6] <- total$p70        
+    pobvivo[h, 7] <- hombres$p75        
+    pobvivo[h, 8] <- mujeres$p75        
+    pobvivo[h, 9] <- total$p75
+    #Low
+    hombres.low <- Pob.ll.vivo(qx = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol = nyears, nrow = nages)[,h])
+    mujeres.low <- Pob.ll.vivo(qx = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    total.low <- Pob.ll.vivo(qx = matrix(LCfut_low[[i]]$total$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    pobvivo.low[h, 1] <- hombres.low$p65        
+    pobvivo.low[h, 2] <- mujeres.low$p65        
+    pobvivo.low[h, 3] <- total.low$p65        
+    pobvivo.low[h, 4] <- hombres.low$p70        
+    pobvivo.low[h, 5] <- mujeres.low$p70        
+    pobvivo.low[h, 6] <- total.low$p70        
+    pobvivo.low[h, 7] <- hombres.low$p75        
+    pobvivo.low[h, 8] <- mujeres.low$p75        
+    pobvivo.low[h, 9] <- total.low$p75
+    #High
+    hombres.high <- Pob.ll.vivo(qx = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol = nyears, nrow = nages)[,h])
+    mujeres.high <- Pob.ll.vivo(qx = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    total.high <- Pob.ll.vivo(qx = matrix(LCfut_high[[i]]$total$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    pobvivo.high[h, 1] <- hombres.high$p65        
+    pobvivo.high[h, 2] <- mujeres.high$p65        
+    pobvivo.high[h, 3] <- total.high$p65        
+    pobvivo.high[h, 4] <- hombres.high$p70        
+    pobvivo.high[h, 5] <- mujeres.high$p70        
+    pobvivo.high[h, 6] <- total.high$p70        
+    pobvivo.high[h, 7] <- hombres.high$p75        
+    pobvivo.high[h, 8] <- mujeres.high$p75        
+    pobvivo.high[h, 9] <- total.high$p75
+  }
+  pob.llegarvivo_FM[[paste0(pob[i])]] <- pobvivo  
+  pob.llegarvivo_FM.low[[paste0(pob[i])]] <- pobvivo.low  
+  pob.llegarvivo_FM.high[[paste0(pob[i])]] <- pobvivo.high  
+}
+capture.output(pob.llegarvivo_FM, file = "Pobllvivo.FM.txt")
+capture.output(pob.llegarvivo_FM.low, file = "Pobllvivo.FM.low.txt")
+capture.output(pob.llegarvivo_FM.high, file = "Pobllvivo.FM.high.txt")
+
+##########################################################################################
+##########################################################################################
+#CONDITIONAL STANDARD DESVIATION
+con.std.des_FM <- list()
+con.std.des_FM.low <- list()
+con.std.des_FM.high <- list()
+tabl.std <- c("s0hombres", "s0mujeres", "s0total", 
+              "s65hombres", "s65mujeres", "s65total", 
+              "s70hombres", "s70mujeres", "s70total", 
+              "s75hombres", "s75mujeres", "s75total")
+edad_media
+i <- 1
+for(i in 1:10){
+  maxyear <- max(paises[[i]]$hombres$Year) + 1
+  years <- c(maxyear:2030)
+  nyears_fm <- length(years)
+  nyears_dm <- length(c(min(paises[[i]]$hombres$Year):max(paises[[i]]$hombres$Year)))
+  nages <- length(edades)
+  std.des <- matrix(NA, nyears_fm, 12, dimnames = list(years, tabl.std))
+  std.des.low <- matrix(NA, nyears_fm, 12, dimnames = list(years, tabl.std))
+  std.des.high <- matrix(NA, nyears_fm, 12, dimnames = list(years, tabl.std))
+  hombres <- mujeres <- total <- NULL
+  hombres.low <- mujeres.low <- total.low <- NULL
+  hombres.high <- mujeres.high <- total.high <- NULL
+  mxt_fue_hom <- mxt_fue_muj <- mxt_fue_tot <- NULL
+  mxt_fue_hom.low <- mxt_fue_muj.low <- mxt_fue_tot.low <- NULL
+  mxt_fue_hom.high <- mxt_fue_muj.high <- mxt_fue_tot.high <- NULL
+  for(h in 1:nyears_fm){
+    #MEAN
+    mxt_fue_hom <- matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$hombres$n[,nyears_dm] - matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$hombres$n[,nyears_dm]-datos_mat[[i]]$hombres$ax[,nyears_dm]))
+    mxt_fue_muj <- matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$mujeres$n[,nyears_dm] - matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$mujeres$n[,nyears_dm]-datos_mat[[i]]$mujeres$ax[,nyears_dm]))
+    mxt_fue_tot <- matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$total$n[,nyears_dm] - matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$total$n[,nyears_dm]-datos_mat[[i]]$total$ax[,nyears_dm]))
+    
+    hombres <- csdev(qx = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$hombres$ax[,nyears_dm],
+                     mx = mxt_fue_hom)
+    mujeres <- csdev(qx = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$mujeres$ax[,nyears_dm],
+                     mx = mxt_fue_muj) 
+    total <- csdev(qx = matrix(LCfut_mean[[i]]$total$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                   ax = datos_mat[[i]]$total$ax[,nyears_dm],
+                   mx = mxt_fue_tot) 
+    std.des[h, 1] <- hombres$s0        
+    std.des[h, 2] <- mujeres$s0        
+    std.des[h, 3] <- total$s0        
+    std.des[h, 4] <- hombres$s65        
+    std.des[h, 5] <- mujeres$s65        
+    std.des[h, 6] <- total$s65        
+    std.des[h, 7] <- hombres$s70        
+    std.des[h, 8] <- mujeres$s70        
+    std.des[h, 9] <- total$s70
+    std.des[h, 10] <- hombres$s75        
+    std.des[h, 11] <- mujeres$s75        
+    std.des[h, 12] <- total$s75
+    #LOW
+    mxt_fue_hom.low <- matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$hombres$n[,nyears_dm] - matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$hombres$n[,nyears_dm]-datos_mat[[i]]$hombres$ax[,nyears_dm]))
+    mxt_fue_muj.low <- matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$mujeres$n[,nyears_dm] - matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$mujeres$n[,nyears_dm]-datos_mat[[i]]$mujeres$ax[,nyears_dm]))
+    mxt_fue_tot.low <- matrix(LCfut_low[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$total$n[,nyears_dm] - matrix(LCfut_low[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$total$n[,nyears_dm]-datos_mat[[i]]$total$ax[,nyears_dm]))
+    
+    hombres.low <- csdev(qx = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$hombres$ax[,nyears_dm],
+                     mx = mxt_fue_hom.low)
+    mujeres.low <- csdev(qx = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$mujeres$ax[,nyears_dm],
+                     mx = mxt_fue_muj.low) 
+    total.low <- csdev(qx = matrix(LCfut_low[[i]]$total$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                   ax = datos_mat[[i]]$total$ax[,nyears_dm],
+                   mx = mxt_fue_tot.low) 
+    std.des.low[h, 1] <- hombres.low$s0        
+    std.des.low[h, 2] <- mujeres.low$s0        
+    std.des.low[h, 3] <- total.low$s0        
+    std.des.low[h, 4] <- hombres.low$s65        
+    std.des.low[h, 5] <- mujeres.low$s65        
+    std.des.low[h, 6] <- total.low$s65        
+    std.des.low[h, 7] <- hombres.low$s70        
+    std.des.low[h, 8] <- mujeres.low$s70        
+    std.des.low[h, 9] <- total.low$s70
+    std.des.low[h, 10] <- hombres.low$s75        
+    std.des.low[h, 11] <- mujeres.low$s75        
+    std.des.low[h, 12] <- total.low$s75
+    #HIGH
+    mxt_fue_hom.high <- matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$hombres$n[,nyears_dm] - matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$hombres$n[,nyears_dm]-datos_mat[[i]]$hombres$ax[,nyears_dm]))
+    mxt_fue_muj.high <- matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$mujeres$n[,nyears_dm] - matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$mujeres$n[,nyears_dm]-datos_mat[[i]]$mujeres$ax[,nyears_dm]))
+    mxt_fue_tot.high <- matrix(LCfut_high[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h]/
+      (datos_mat[[i]]$total$n[,nyears_dm] - matrix(LCfut_high[[i]]$total$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h] *
+         (datos_mat[[i]]$total$n[,nyears_dm]-datos_mat[[i]]$total$ax[,nyears_dm]))
+    
+    hombres.high <- csdev(qx = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$hombres$ax[,nyears_dm],
+                     mx = mxt_fue_hom.high)
+    mujeres.high <- csdev(qx = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$mujeres$ax[,nyears_dm],
+                     mx = mxt_fue_muj.high) 
+    total.high <- csdev(qx = matrix(LCfut_high[[i]]$total$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                   ax = datos_mat[[i]]$total$ax[,nyears_dm],
+                   mx = mxt_fue_tot.high) 
+    std.des.high[h, 1] <- hombres.high$s0        
+    std.des.high[h, 2] <- mujeres.high$s0        
+    std.des.high[h, 3] <- total.high$s0        
+    std.des.high[h, 4] <- hombres.high$s65        
+    std.des.high[h, 5] <- mujeres.high$s65        
+    std.des.high[h, 6] <- total.high$s65        
+    std.des.high[h, 7] <- hombres.high$s70        
+    std.des.high[h, 8] <- mujeres.high$s70        
+    std.des.high[h, 9] <- total.high$s70
+    std.des.high[h, 10] <- hombres.high$s75        
+    std.des.high[h, 11] <- mujeres.high$s75        
+    std.des.high[h, 12] <- total.high$s75
+    
+  }
+  con.std.des_FM[[paste0(pob[i])]] <- std.des  
+  con.std.des_FM.low[[paste0(pob[i])]] <- std.des.low  
+  con.std.des_FM.high[[paste0(pob[i])]] <- std.des.high  
+}
+capture.output(con.std.des_FM, file = "ConStdDesvi.FM.txt")
+capture.output(con.std.des_FM.low, file = "ConStdDesvi.FM.low.txt")
+capture.output(con.std.des_FM.high, file = "ConStdDesvi.FM.high.txt")
+
+##########################################################################################
+##########################################################################################
+#Por último vamos a proceder a calcular Life Preparancy
+#Edad de preparación para la vida 
+#Ahora una vez que tenemos este valor vamos a proceder a calcular esta variable para todos los paises y sexos 
+Eprep.vida <- list()
+Eprep.vida.low <- list()
+Eprep.vida.high <- list()
+tabl.vida <- c("hage0.50%_hombres", "hage0.50%_mujeres", "hage0.50%_total", 
+               "hage65.25%_hombres", "hage65.25%_mujeres", "hage65.25%_total")
+for(i in 1:10){
+  maxyear <- max(paises[[i]]$hombres$Year) + 1
+  years <- c(maxyear:2030)
+  nyears <- length(years)
+  nages <- length(edades)
+  prep.vid <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vida))
+  prep.vid.low <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vida))
+  prep.vid.high <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vida))
+  hombres1 <- mujeres1 <- total1 <- NULL
+  hombres2 <- mujeres2 <- total2 <- NULL
+  #LOW
+  hombres1.low <- mujeres1.low <- total1.low <- NULL
+  hombres2.low <- mujeres2.low <- total2.low <- NULL
+  #HIGH
+  hombres1.high <- mujeres1.high <- total1.high <- NULL
+  hombres2.high <- mujeres2.high <- total2.high <- NULL
+  for(h in 1:nyears){
+    hombres1 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 0, z = 0.5)
+    hombres2 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 65, z = 0.25)
+    mujeres1 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 0, z = 0.5)
+    mujeres2 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 65, z = 0.25)
+    total1 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$total$qxt, ncol = nyears, nrow = nages)[,h],
+                              x = 0, z = 0.5)
+    total2 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$total$qxt, ncol = nyears, nrow = nages)[,h],
+                              x = 65, z = 0.25)
+    prep.vid[h, 1] <- hombres1        
+    prep.vid[h, 2] <- mujeres1        
+    prep.vid[h, 3] <- total1        
+    prep.vid[h, 4] <- hombres2        
+    prep.vid[h, 5] <- mujeres2        
+    prep.vid[h, 6] <- total2        
+    #LOW
+    hombres1.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 0, z = 0.5)
+    hombres2.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 65, z = 0.25)
+    mujeres1.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 0, z = 0.5)
+    mujeres2.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 65, z = 0.25)
+    total1.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$total$qxt, ncol = nyears, nrow = nages)[,h],
+                                  x = 0, z = 0.5)
+    total2.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$total$qxt, ncol = nyears, nrow = nages)[,h],
+                                  x = 65, z = 0.25)
+    prep.vid.low[h, 1] <- hombres1.low        
+    prep.vid.low[h, 2] <- mujeres1.low        
+    prep.vid.low[h, 3] <- total1.low        
+    prep.vid.low[h, 4] <- hombres2.low        
+    prep.vid.low[h, 5] <- mujeres2.low        
+    prep.vid.low[h, 6] <- total2.low        
+    #HIGH
+    hombres1.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 0, z = 0.5)
+    hombres2.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 65, z = 0.25)
+    mujeres1.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 0, z = 0.5)
+    mujeres2.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 65, z = 0.25)
+    total1.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$total$qxt, ncol = nyears, nrow = nages)[,h],
+                                   x = 0, z = 0.5)
+    total2.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$total$qxt, ncol = nyears, nrow = nages)[,h],
+                                   x = 65, z = 0.25)
+    prep.vid.high[h, 1] <- hombres1.high        
+    prep.vid.high[h, 2] <- mujeres1.high        
+    prep.vid.high[h, 3] <- total1.high        
+    prep.vid.high[h, 4] <- hombres2.high        
+    prep.vid.high[h, 5] <- mujeres2.high        
+    prep.vid.high[h, 6] <- total2.high        
+    
+  }
+  Eprep.vida[[paste0(pob[i])]] <- prep.vid  
+  Eprep.vida.low[[paste0(pob[i])]] <- prep.vid.low  
+  Eprep.vida.high[[paste0(pob[i])]] <- prep.vid.high  
+}
+capture.output(Eprep.vida, file = "EdadPrepVida.FM.txt")
+capture.output(Eprep.vida.low, file = "EdadPrepVida.FM.low.txt")
+capture.output(Eprep.vida.high, file = "EdadPrepVida.FM.high.txt")
+
+#Vamos a guardar los datos que nos interesan fuera de muesta
+save(esperanzas.fm, esperanzas.fm_low, esperanzas.fm_hig,
+     edad_modal_fm, edad_modal_fm_low, edad_modal_fm_high, 
+     gini.index_FM, gini.index_FM.low, gini.index_FM.high, 
+     pob.llegarvivo_FM, pob.llegarvivo_FM.low, pob.llegarvivo_FM.high,
+     con.std.des_FM, con.std.des_FM.low, con.std.des_FM.high, 
+     Eprep.vida, Eprep.vida.low, Eprep.vida.high, 
+     file = "Indicadores_FM.RData")
+
+
