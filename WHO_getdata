@@ -1,0 +1,2046 @@
+library(HMDHFDplus)
+library(demography)
+library(forecast)
+library(StMoMo)
+
+
+
+afg <- read.table("Afghanistan.txt", header = TRUE)
+alg <- read.table("Algeria.txt", header = TRUE)
+ang <- read.table("Angola.txt", header = TRUE)
+ban <- read.table("Bangladesh.txt", header = TRUE)
+chin <- read.table("China.txt", header = TRUE)
+egy <- read.table("Egypt.txt", header = TRUE)
+eth <- read.table("Ethiopia.txt", header  = TRUE)
+fil <- read.table("Filipinas.txt", header = TRUE)
+gha <- read.table("Ghana.txt", header = TRUE)
+ind <- read.table("India.txt", header = TRUE)
+indo <- read.table("Indonesia.txt", header = TRUE)
+ira <- read.table("Iran.txt", header = TRUE)
+iraq <- read.table("Iraq.txt", header = TRUE)
+ken <- read.table("Kenya.txt", header = TRUE)
+mal <- read.table("Malaysia.txt", header = TRUE)
+mor <- read.table("Morocco.txt", header = TRUE)
+moz <- read.table("Mozambique.txt", header = TRUE)
+mya <- read.table("Myanmar.txt", header = TRUE)
+nig <- read.table("Nigeria.txt", header = TRUE)
+pak <- read.table("Pakistan.txt", header = TRUE)
+tan <- read.table("R.D.Tanzania.txt", header = TRUE)
+con <- read.table("RD.Congo.txt", header = TRUE)
+sau <- read.table("SaudiArabia.txt", header = TRUE)
+sou <- read.table("SouthAfrica.txt", header = TRUE)
+sud <- read.table("Sudan.txt", header = TRUE)
+tha <- read.table("Thailand.txt", header = TRUE)
+tur <- read.table("Turquia.txt", header = TRUE)
+uga <- read.table("Uganda.txt", header = TRUE)
+uzb <- read.table("Uzbekistan.txt", header = TRUE)
+vie <- read.table("VietNam.txt", header = TRUE)
+per <- read.table("Peru.txt", header = TRUE)
+
+#Poblacion 
+pob <- c("AFG", "ALG", "ANG", "BAN", "CHIN", "EGY", "ETH", "FIL", "GHA", "IND", "INDO", 
+         "IRA", "IRAQ", "KEN", "MAL", "MOR", "MOZ", "MYA", "NIG", "PAK", "TAN", "CON", 
+         "SAU", "SOU", "SUD", "THA", "TUR", "UGA", "UZB", "VIE", "PER")
+
+#AFGHANISTAN --- AFG
+#ALGERIA -- ALG
+#ANGOLA -- ANG
+#BANGLADESH -- BAN
+#CHINA -- CHIN
+#EGY ---- EGYPTO
+#ETHIOPIA -- ETH
+#FILIPINAS --- FIL
+#GHANA --- GHA
+#INDIA --- IND
+#INDONESIA --- INDO
+#IRAN ---- IRA
+#IRAQ ---- IRAQ
+#KENIA --- KEN
+#MALASIA --- MAL 
+#MOROCCO --- MOR
+#MOZAMBIQUE --- MOZ
+#MYANMAR --- MYA
+#NIGERIA --- NIG
+#PAKISTAN --- PAK
+#TANZANIA --- TAN 
+#R.D.CONGO --- CON 
+#ARABIA SAUDI --- SAU 
+#SOUTH AFRICA --- SOU 
+#R.D. SUDAN ---- SUD
+#THAILANDIA ---- THA
+#TURQUIA ------- TUR
+#UGANDA -------- UGA
+#UZBEKISTAN ---- UZB
+#VIETNAM ------- VIE
+#PERU ---------- PER
+
+###############################################################################################
+#Una vez que ya tengo los datos de defunciones y poblaciones, 
+#voy a obtener las mxt correspondientes a cada país y sexo para toda la muestra
+#mxt = dx/Px
+
+#Y partir de ahí ya podre calcular las qxt
+##################################################################################
+#Ahora voy a calcular las qxt de cada pais y sexo, para incorporarlas a los datos 
+#AFGHANISTAN
+n_ages <- c(1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, -1)
+afg_n <- rep(n_ages, ((max(afg$Period)-min(afg$Period))/5+1))
+qxt_afg_male <- (afg_n*afg$mxt_m)/(1+(afg_n - afg$axt_m)*afg$mxt_m)
+qxt_afg_female <- (afg_n*afg$mxt_f)/(1+(afg_n - afg$axt_f)*afg$mxt_f)
+
+#ALGERIA -- ALG
+alg_n <- rep(n_ages, ((max(alg$Period)-min(alg$Period))/5+1))
+qxt_alg_male <- (alg_n*alg$mxt_m)/(1+(alg_n - alg$axt_m)*alg$mxt_m)
+qxt_alg_female <- (alg_n*alg$mxt_f)/(1+(alg_n - alg$axt_f)*alg$mxt_f)
+
+#ANGOLA -- ANG
+ang_n <- rep(n_ages, ((max(ang$Period)-min(ang$Period))/5+1))
+qxt_ang_male <- (ang_n*ang$mxt_m)/(1+(ang_n - ang$axt_m)*ang$mxt_m)
+qxt_ang_female <- (ang_n*ang$mxt_f)/(1+(ang_n - ang$axt_f)*ang$mxt_f)
+
+#BANGLADESH -- BAN
+ban_n <- rep(n_ages, ((max(ban$Period)-min(ban$Period))/5+1))
+qxt_ban_male <- (ban_n*ban$mxt_m)/(1+(ban_n - ban$axt_m)*ban$mxt_m)
+qxt_ban_female <- (ban_n*ban$mxt_f)/(1+(ban_n - ban$axt_f)*ban$mxt_f)
+
+#CHINA -- CHIN
+chin_n <- rep(n_ages, ((max(chin$Period)-min(chin$Period))/5+1))
+qxt_chin_male <- (chin_n*chin$mxt_m)/(1+(chin_n - chin$axt_m)*chin$mxt_m)
+qxt_chin_female <- (chin_n*chin$mxt_f)/(1+(chin_n - chin$axt_f)*chin$mxt_f)
+
+#EGY ---- EGYPTO
+egy_n <- rep(n_ages, ((max(egy$Period)-min(egy$Period))/5+1))
+qxt_egy_male <- (egy_n*egy$mxt_m)/(1+(egy_n - egy$axt_m)*egy$mxt_m)
+qxt_egy_female <- (egy_n*egy$mxt_f)/(1+(egy_n - egy$axt_f)*egy$mxt_f)
+
+#ETHIOPIA -- ETH
+eth_n <- rep(n_ages, ((max(eth$Period)-min(eth$Period))/5+1))
+qxt_eth_male <- (eth_n*eth$mxt_m)/(1+(eth_n - eth$axt_m)*eth$mxt_m)
+qxt_eth_female <- (eth_n*eth$mxt_f)/(1+(eth_n - eth$axt_f)*eth$mxt_f)
+
+#FILIPINAS --- FIL
+fil_n <- rep(n_ages, ((max(fil$Period)-min(fil$Period))/5+1))
+qxt_fil_male <- (fil_n*fil$mxt_m)/(1+(fil_n - fil$axt_m)*fil$mxt_m)
+qxt_fil_female <- (fil_n*fil$mxt_f)/(1+(fil_n - fil$axt_f)*fil$mxt_f)
+
+#GHANA --- GHA
+gha_n <- rep(n_ages, ((max(gha$Period)-min(gha$Period))/5+1))
+qxt_gha_male <- (gha_n*gha$mxt_m)/(1+(gha_n - gha$axt_m)*gha$mxt_m)
+qxt_gha_female <- (gha_n*gha$mxt_f)/(1+(gha_n - gha$axt_f)*gha$mxt_f)
+
+#INDIA --- IND
+ind_n <- rep(n_ages, ((max(ind$Period)-min(ind$Period))/5+1))
+qxt_ind_male <- (ind_n*ind$mxt_m)/(1+(ind_n - ind$axt_m)*ind$mxt_m)
+qxt_ind_female <- (ind_n*ind$mxt_f)/(1+(ind_n - ind$axt_f)*ind$mxt_f)
+
+#INDONESIA --- INDO
+indo_n <- rep(n_ages, ((max(indo$Period)-min(indo$Period))/5+1))
+qxt_indo_male <- (indo_n*indo$mxt_m)/(1+(indo_n - indo$axt_m)*indo$mxt_m)
+qxt_indo_female <- (indo_n*indo$mxt_f)/(1+(indo_n - indo$axt_f)*indo$mxt_f)
+
+#IRAN ---- IRA
+ira_n <- rep(n_ages, ((max(ira$Period)-min(ira$Period))/5+1))
+qxt_ira_male <- (ira_n*ira$mxt_m)/(1+(ira_n - ira$axt_m)*ira$mxt_m)
+qxt_ira_female <- (ira_n*ira$mxt_f)/(1+(ira_n - ira$axt_f)*ira$mxt_f)
+
+#IRAQ ---- IRAQ
+iraq_n <- rep(n_ages, ((max(iraq$Period)-min(iraq$Period))/5+1))
+qxt_iraq_male <- (iraq_n*iraq$mxt_m)/(1+(iraq_n - iraq$axt_m)*iraq$mxt_m)
+qxt_iraq_female <- (iraq_n*iraq$mxt_f)/(1+(iraq_n - iraq$axt_f)*iraq$mxt_f)
+
+#KENIA --- KEN
+ken_n <- rep(n_ages, ((max(ken$Period)-min(ken$Period))/5+1))
+qxt_ken_male <- (ken_n*ken$mxt_m)/(1+(ken_n - ken$axt_m)*ken$mxt_m)
+qxt_ken_female <- (ken_n*ken$mxt_f)/(1+(ken_n - ken$axt_f)*ken$mxt_f)
+
+#MALASIA --- MAL 
+mal_n <- rep(n_ages, ((max(mal$Period)-min(mal$Period))/5+1))
+qxt_mal_male <- (mal_n*mal$mxt_m)/(1+(mal_n - mal$axt_m)*mal$mxt_m)
+qxt_mal_female <- (mal_n*mal$mxt_f)/(1+(mal_n - mal$axt_f)*mal$mxt_f)
+
+#MOROCCO --- MOR
+mor_n <- rep(n_ages, ((max(mor$Period)-min(mor$Period))/5+1))
+qxt_mor_male <- (mor_n*mor$mxt_m)/(1+(mor_n - mor$axt_m)*mor$mxt_m)
+qxt_mor_female <- (mor_n*mor$mxt_f)/(1+(mor_n - mor$axt_f)*mor$mxt_f)
+
+#MOZAMBIQUE --- MOZ
+moz_n <- rep(n_ages, ((max(moz$Period)-min(moz$Period))/5+1))
+qxt_moz_male <- (moz_n*moz$mxt_m)/(1+(moz_n - moz$axt_m)*moz$mxt_m)
+qxt_moz_female <- (moz_n*moz$mxt_f)/(1+(moz_n - moz$axt_f)*moz$mxt_f)
+
+#MYANMAR --- MYA
+mya_n <- rep(n_ages, ((max(mya$Period)-min(mya$Period))/5+1))
+qxt_mya_male <- (mya_n*mya$mxt_m)/(1+(mya_n - mya$axt_m)*mya$mxt_m)
+qxt_mya_female <- (mya_n*mya$mxt_f)/(1+(mya_n - mya$axt_f)*mya$mxt_f)
+
+#NIGERIA --- NIG
+nig_n <- rep(n_ages, ((max(nig$Period)-min(nig$Period))/5+1))
+qxt_nig_male <- (nig_n*nig$mxt_m)/(1+(nig_n - nig$axt_m)*nig$mxt_m)
+qxt_nig_female <- (nig_n*nig$mxt_f)/(1+(nig_n - nig$axt_f)*nig$mxt_f)
+
+#PAKISTAN --- PAK
+pak_n <- rep(n_ages, ((max(pak$Period)-min(pak$Period))/5+1))
+qxt_pak_male <- (pak_n*pak$mxt_m)/(1+(pak_n - pak$axt_m)*pak$mxt_m)
+qxt_pak_female <- (pak_n*pak$mxt_f)/(1+(pak_n - pak$axt_f)*pak$mxt_f)
+
+#TANZANIA --- TAN 
+tan_n <- rep(n_ages, ((max(tan$Period)-min(tan$Period))/5+1))
+qxt_tan_male <- (tan_n*tan$mxt_m)/(1+(tan_n - tan$axt_m)*tan$mxt_m)
+qxt_tan_female <- (tan_n*tan$mxt_f)/(1+(tan_n - tan$axt_f)*tan$mxt_f)
+
+#R.D.CONGO --- CON 
+con_n <- rep(n_ages, ((max(con$Period)-min(con$Period))/5+1))
+qxt_con_male <- (con_n*con$mxt_m)/(1+(con_n - con$axt_m)*con$mxt_m)
+qxt_con_female <- (con_n*con$mxt_f)/(1+(con_n - con$axt_f)*con$mxt_f)
+
+#ARABIA SAUDI --- SAU 
+sau_n <- rep(n_ages, ((max(sau$Period)-min(sau$Period))/5+1))
+qxt_sau_male <- (sau_n*sau$mxt_m)/(1+(sau_n - sau$axt_m)*sau$mxt_m)
+qxt_sau_female <- (sau_n*sau$mxt_f)/(1+(sau_n - sau$axt_f)*sau$mxt_f)
+
+#SOUTH AFRICA --- SOU 
+sou_n <- rep(n_ages, ((max(sou$Period)-min(sou$Period))/5+1))
+qxt_sou_male <- (sou_n*sou$mxt_m)/(1+(sou_n - sou$axt_m)*sou$mxt_m)
+qxt_sou_female <- (sou_n*sou$mxt_f)/(1+(sou_n - sou$axt_f)*sou$mxt_f)
+
+#R.D. SUDAN ---- SUD
+sud_n <- rep(n_ages, ((max(sud$Period)-min(sud$Period))/5+1))
+qxt_sud_male <- (sud_n*sud$mxt_m)/(1+(sud_n - sud$axt_m)*sud$mxt_m)
+qxt_sud_female <- (sud_n*sud$mxt_f)/(1+(sud_n - sud$axt_f)*sud$mxt_f)
+
+#THAILANDIA ---- THA
+tha_n <- rep(n_ages, ((max(tha$Period)-min(tha$Period))/5+1))
+qxt_tha_male <- (tha_n*tha$mxt_m)/(1+(tha_n - tha$axt_m)*tha$mxt_m)
+qxt_tha_female <- (tha_n*tha$mxt_f)/(1+(tha_n - tha$axt_f)*tha$mxt_f)
+
+#TURQUIA ------- TUR
+tur_n <- rep(n_ages, ((max(tur$Period)-min(tur$Period))/5+1))
+qxt_tur_male <- (tur_n*tur$mxt_m)/(1+(tur_n - tur$axt_m)*tur$mxt_m)
+qxt_tur_female <- (tur_n*tur$mxt_f)/(1+(tur_n - tur$axt_f)*tur$mxt_f)
+
+#UGANDA -------- UGA
+uga_n <- rep(n_ages, ((max(uga$Period)-min(uga$Period))/5+1))
+qxt_uga_male <- (uga_n*uga$mxt_m)/(1+(uga_n - uga$axt_m)*uga$mxt_m)
+qxt_uga_female <- (uga_n*uga$mxt_f)/(1+(uga_n - uga$axt_f)*uga$mxt_f)
+
+#UZBEKISTAN ---- UZB
+uzb_n <- rep(n_ages, ((max(uzb$Period)-min(uzb$Period))/5+1))
+qxt_uzb_male <- (uzb_n*uzb$mxt_m)/(1+(uzb_n - uzb$axt_m)*uzb$mxt_m)
+qxt_uzb_female <- (uzb_n*uzb$mxt_f)/(1+(uzb_n - uzb$axt_f)*uzb$mxt_f)
+
+#VIETNAM ------- VIE
+vie_n <- rep(n_ages, ((max(vie$Period)-min(vie$Period))/5+1))
+qxt_vie_male <- (vie_n*vie$mxt_m)/(1+(vie_n - vie$axt_m)*vie$mxt_m)
+qxt_vie_female <- (vie_n*vie$mxt_f)/(1+(vie_n - vie$axt_f)*vie$mxt_f)
+
+#PERU ------- PER
+per_n <- rep(n_ages, ((max(per$Period)-min(vie$Period))/5+1))
+qxt_per_male <- (per_n*per$mxt_m)/(1+(per_n - per$axt_m)*per$mxt_m)
+qxt_per_female <- (per_n*per$mxt_f)/(1+(per_n - per$axt_f)*per$mxt_f)
+
+
+##########################################################################################################
+##########################################################################################################
+#AFGHANISTAN 
+afg_m <- cbind.data.frame(Age = afg$Age, Year = afg$Period, mxt = afg$mxt_m, ax = afg$axt_m, qxt = qxt_afg_male)
+afg_f <- cbind.data.frame(Age = afg$Age, Year = afg$Period, mxt = afg$mxt_f, ax = afg$axt_f, qxt = qxt_afg_female)
+
+#ALGERIA -- ALG
+alg_m <- cbind.data.frame(Age = alg$Age, Year = alg$Period, mxt = alg$mxt_m, ax = alg$axt_m, qxt = qxt_alg_male)
+alg_f <- cbind.data.frame(Age = alg$Age, Year = alg$Period, mxt = alg$mxt_f, ax = alg$axt_f, qxt = qxt_alg_female)
+
+#ANGOLA -- ANG
+ang_m <- cbind.data.frame(Age = ang$Age, Year = ang$Period, mxt = ang$mxt_m, ax = ang$axt_m, qxt = qxt_ang_male)
+ang_f <- cbind.data.frame(Age = ang$Age, Year = ang$Period, mxt = ang$mxt_f, ax = ang$axt_f, qxt = qxt_ang_female)
+
+#BANGLADESH -- BAN
+ban_m <- cbind.data.frame(Age = ban$Age, Year = ban$Period, mxt = ban$mxt_m, ax = ban$axt_m, qxt = qxt_ban_male)
+ban_f <- cbind.data.frame(Age = ban$Age, Year = ban$Period, mxt = ban$mxt_f, ax = ban$axt_f, qxt = qxt_ban_female)
+
+#CHINA -- CHIN
+chin_m <- cbind.data.frame(Age = chin$Age, Year = chin$Period, mxt = chin$mxt_m, ax = chin$axt_m, qxt = qxt_chin_male)
+chin_f <- cbind.data.frame(Age = chin$Age, Year = chin$Period, mxt = chin$mxt_f, ax = chin$axt_f, qxt = qxt_chin_female)
+
+#EGY ---- EGYPTO
+egy_m <- cbind.data.frame(Age = egy$Age, Year = egy$Period, mxt = egy$mxt_m, ax = egy$axt_m, qxt = qxt_egy_male)
+egy_f <- cbind.data.frame(Age = egy$Age, Year = egy$Period, mxt = egy$mxt_f, ax = egy$axt_f, qxt = qxt_egy_female)
+
+#ETHIOPIA -- ETH
+eth_m <- cbind.data.frame(Age = eth$Age, Year = eth$Period, mxt = eth$mxt_m, ax = eth$axt_m, qxt = qxt_eth_male)
+eth_f <- cbind.data.frame(Age = eth$Age, Year = eth$Period, mxt = eth$mxt_f, ax = eth$axt_f, qxt = qxt_eth_female)
+
+#FILIPINAS --- FIL
+fil_m <- cbind.data.frame(Age = fil$Age, Year = fil$Period, mxt = fil$mxt_m, ax = fil$axt_m, qxt = qxt_fil_male)
+fil_f <- cbind.data.frame(Age = fil$Age, Year = fil$Period, mxt = fil$mxt_f, ax = fil$axt_f, qxt = qxt_fil_female)
+
+#GHANA --- GHA
+gha_m <- cbind.data.frame(Age = gha$Age, Year = gha$Period, mxt = gha$mxt_m, ax = gha$axt_m, qxt = qxt_gha_male)
+gha_f <- cbind.data.frame(Age = gha$Age, Year = gha$Period, mxt = gha$mxt_f, ax = gha$axt_f, qxt = qxt_gha_female)
+
+#INDIA --- IND
+ind_m <- cbind.data.frame(Age = ind$Age, Year = ind$Period, mxt = ind$mxt_m, ax = ind$axt_m, qxt = qxt_ind_male)
+ind_f <- cbind.data.frame(Age = ind$Age, Year = ind$Period, mxt = ind$mxt_f, ax = ind$axt_f, qxt = qxt_ind_female)
+
+#INDONESIA --- INDO
+indo_m <- cbind.data.frame(Age = indo$Age, Year = indo$Period, mxt = indo$mxt_m, ax = indo$axt_m, qxt = qxt_indo_male)
+indo_f <- cbind.data.frame(Age = indo$Age, Year = indo$Period, mxt = indo$mxt_f, ax = indo$axt_f, qxt = qxt_indo_female)
+
+#IRAN ---- IRA
+ira_m <- cbind.data.frame(Age = ira$Age, Year = ira$Period, mxt = ira$mxt_m, ax = ira$axt_m, qxt = qxt_ira_male)
+ira_f <- cbind.data.frame(Age = ira$Age, Year = ira$Period, mxt = ira$mxt_f, ax = ira$axt_f, qxt = qxt_ira_female)
+
+#IRAQ ---- IRAQ
+iraq_m <- cbind.data.frame(Age = iraq$Age, Year = iraq$Period, mxt = iraq$mxt_m, ax = iraq$axt_m, qxt = qxt_iraq_male)
+iraq_f <- cbind.data.frame(Age = iraq$Age, Year = iraq$Period, mxt = iraq$mxt_f, ax = iraq$axt_f, qxt = qxt_iraq_female)
+
+#KENIA --- KEN
+ken_m <- cbind.data.frame(Age = ken$Age, Year = ken$Period, mxt = ken$mxt_m, ax = ken$axt_m, qxt = qxt_ken_male)
+ken_f <- cbind.data.frame(Age = ken$Age, Year = ken$Period, mxt = ken$mxt_f, ax = ken$axt_f, qxt = qxt_ken_female)
+
+#MALASIA --- MAL 
+mal_m <- cbind.data.frame(Age = mal$Age, Year = mal$Period, mxt = mal$mxt_m, ax = mal$axt_m, qxt = qxt_mal_male)
+mal_f <- cbind.data.frame(Age = mal$Age, Year = mal$Period, mxt = mal$mxt_f, ax = mal$axt_f, qxt = qxt_mal_female)
+
+#MOROCCO --- MOR
+mor_m <- cbind.data.frame(Age = mor$Age, Year = mor$Period, mxt = mor$mxt_m, ax = mor$axt_m, qxt = qxt_mor_male)
+mor_f <- cbind.data.frame(Age = mor$Age, Year = mor$Period, mxt = mor$mxt_f, ax = mor$axt_f, qxt = qxt_mor_female)
+
+#MOZAMBIQUE --- MOZ
+moz_m <- cbind.data.frame(Age = moz$Age, Year = moz$Period, mxt = moz$mxt_m, ax = moz$axt_m, qxt = qxt_moz_male)
+moz_f <- cbind.data.frame(Age = moz$Age, Year = moz$Period, mxt = moz$mxt_f, ax = moz$axt_f, qxt = qxt_moz_female)
+
+#MYANMAR --- MYA
+mya_m <- cbind.data.frame(Age = mya$Age, Year = mya$Period, mxt = mya$mxt_m, ax = mya$axt_m, qxt = qxt_mya_male)
+mya_f <- cbind.data.frame(Age = mya$Age, Year = mya$Period, mxt = mya$mxt_f, ax = mya$axt_f, qxt = qxt_mya_female)
+
+#NIGERIA --- NIG
+nig_m <- cbind.data.frame(Age = nig$Age, Year = nig$Period, mxt = nig$mxt_m, ax = nig$axt_m, qxt = qxt_nig_male)
+nig_f <- cbind.data.frame(Age = nig$Age, Year = nig$Period, mxt = nig$mxt_f, ax = nig$axt_f, qxt = qxt_nig_female)
+
+#PAKISTAN --- PAK
+pak_m <- cbind.data.frame(Age = pak$Age, Year = pak$Period, mxt = pak$mxt_m, ax = pak$axt_m, qxt = qxt_pak_male)
+pak_f <- cbind.data.frame(Age = pak$Age, Year = pak$Period, mxt = pak$mxt_f, ax = pak$axt_f, qxt = qxt_pak_female)
+
+#TANZANIA --- TAN 
+tan_m <- cbind.data.frame(Age = tan$Age, Year = tan$Period, mxt = tan$mxt_m, ax = tan$axt_m, qxt = qxt_tan_male)
+tan_f <- cbind.data.frame(Age = tan$Age, Year = tan$Period, mxt = tan$mxt_f, ax = tan$axt_f, qxt = qxt_tan_female)
+
+#R.D.CONGO --- CON 
+con_m <- cbind.data.frame(Age = con$Age, Year = con$Period, mxt = con$mxt_m, ax = con$axt_m, qxt = qxt_con_male)
+con_f <- cbind.data.frame(Age = con$Age, Year = con$Period, mxt = con$mxt_f, ax = con$axt_f, qxt = qxt_con_female)
+
+#ARABIA SAUDI --- SAU 
+sau_m <- cbind.data.frame(Age = sau$Age, Year = sau$Period, mxt = sau$mxt_m, ax = sau$axt_m, qxt = qxt_sau_male)
+sau_f <- cbind.data.frame(Age = sau$Age, Year = sau$Period, mxt = sau$mxt_f, ax = sau$axt_f, qxt = qxt_sau_female)
+
+#SOUTH AFRICA --- SOU 
+sou_m <- cbind.data.frame(Age = sou$Age, Year = sou$Period, mxt = sou$mxt_m, ax = sou$axt_m, qxt = qxt_sou_male)
+sou_f <- cbind.data.frame(Age = sou$Age, Year = sou$Period, mxt = sou$mxt_f, ax = sou$axt_f, qxt = qxt_sou_female)
+
+#R.D. SUDAN ---- SUD
+sud_m <- cbind.data.frame(Age = sud$Age, Year = sud$Period, mxt = sud$mxt_m, ax = sud$axt_m, qxt = qxt_sud_male)
+sud_f <- cbind.data.frame(Age = sud$Age, Year = sud$Period, mxt = sud$mxt_f, ax = sud$axt_f, qxt = qxt_sud_female)
+
+#THAILANDIA ---- THA
+tha_m <- cbind.data.frame(Age = tha$Age, Year = tha$Period, mxt = tha$mxt_m, ax = tha$axt_m, qxt = qxt_tha_male)
+tha_f <- cbind.data.frame(Age = tha$Age, Year = tha$Period, mxt = tha$mxt_f, ax = tha$axt_f, qxt = qxt_tha_female)
+
+#TURQUIA ------- TUR
+tur_m <- cbind.data.frame(Age = tur$Age, Year = tur$Period, mxt = tur$mxt_m, ax = tur$axt_m, qxt = qxt_tur_male)
+tur_f <- cbind.data.frame(Age = tur$Age, Year = tur$Period, mxt = tur$mxt_f, ax = tur$axt_f, qxt = qxt_tur_female)
+
+#UGANDA -------- UGA
+uga_m <- cbind.data.frame(Age = uga$Age, Year = uga$Period, mxt = uga$mxt_m, ax = uga$axt_m, qxt = qxt_uga_male)
+uga_f <- cbind.data.frame(Age = uga$Age, Year = uga$Period, mxt = uga$mxt_f, ax = uga$axt_f, qxt = qxt_uga_female)
+
+#UZBEKISTAN ---- UZB
+uzb_m <- cbind.data.frame(Age = uzb$Age, Year = uzb$Period, mxt = uzb$mxt_m, ax = uzb$axt_m, qxt = qxt_uzb_male)
+uzb_f <- cbind.data.frame(Age = uzb$Age, Year = uzb$Period, mxt = uzb$mxt_f, ax = uzb$axt_f, qxt = qxt_uzb_female)
+
+#VIETNAM ------- VIE
+vie_m <- cbind.data.frame(Age = vie$Age, Year = vie$Period, mxt = vie$mxt_m, ax = vie$axt_m, qxt = qxt_vie_male)
+vie_f <- cbind.data.frame(Age = vie$Age, Year = vie$Period, mxt = vie$mxt_f, ax = vie$axt_f, qxt = qxt_vie_female)
+
+#PERU --- PER
+per_m <- cbind.data.frame(Age = per$Age, Year = per$Period, mxt = per$mxt_m, ax = per$axt_m, qxt = qxt_per_male)
+per_f <- cbind.data.frame(Age = per$Age, Year = per$Period, mxt = per$mxt_f, ax = per$axt_f, qxt = qxt_per_female)
+
+###############################################################################################
+###############################################################################################
+#Ahora necesito cuadrar los datos para que vayan desde 1989 hasta el último dato disponible y luego quedarme 
+#con las tasas de mortalidad menores de 90
+#AFGHANISTAN --- AFG
+summary(afg_m)
+afg_m <- afg_m[afg_m$Year>1989,]
+afg_f <- afg_f[afg_f$Year>1989,]
+afg_m <- afg_m[afg_m$Age<90,]
+afg_f <- afg_f[afg_f$Age<90,]
+head(afg_m)
+head(afg_f)
+
+#ALGERIA -- ALG
+summary(alg_m)
+alg_m <- alg_m[alg_m$Year>1989,]
+alg_f <- alg_f[alg_f$Year>1989,]
+alg_m <- alg_m[alg_m$Age<90,]
+alg_f <- alg_f[alg_f$Age<90,]
+head(alg_m)
+head(alg_f)
+
+#ANGOLA -- ANG
+summary(ang_m)
+ang_m <- ang_m[ang_m$Year>1989,]
+ang_f <- ang_f[ang_f$Year>1989,]
+ang_m <- ang_m[ang_m$Age<90,]
+ang_f <- ang_f[ang_f$Age<90,]
+head(ang_m)
+head(ang_f)
+
+#BANGLADESH -- BAN
+summary(ban_m)
+ban_m <- ban_m[ban_m$Year>1989,]
+ban_f <- ban_f[ban_f$Year>1989,]
+ban_m <- ban_m[ban_m$Age<90,]
+ban_f <- ban_f[ban_f$Age<90,]
+head(ban_m)
+head(ban_f)
+
+#CHINA -- CHIN
+summary(chin_m)
+chin_m <- chin_m[chin_m$Year>1989,]
+chin_f <- chin_f[chin_f$Year>1989,]
+chin_m <- chin_m[chin_m$Age<90,]
+chin_f <- chin_f[chin_f$Age<90,]
+head(chin_m)
+head(chin_f)
+
+#EGY ---- EGYPTO
+summary(egy_m)
+egy_m <- egy_m[egy_m$Year>1989,]
+egy_f <- egy_f[egy_f$Year>1989,]
+egy_m <- egy_m[egy_m$Age<90,]
+egy_f <- egy_f[egy_f$Age<90,]
+head(egy_m)
+head(egy_f)
+
+#ETHIOPIA -- ETH
+summary(eth_m)
+eth_m <- eth_m[eth_m$Year>1989,]
+eth_f <- eth_f[eth_f$Year>1989,]
+eth_m <- eth_m[eth_m$Age<90,]
+eth_f <- eth_f[eth_f$Age<90,]
+head(eth_m)
+head(eth_f)
+
+#FILIPINAS --- FIL
+summary(fil_m)
+fil_m <- fil_m[fil_m$Year>1989,]
+fil_f <- fil_f[fil_f$Year>1989,]
+fil_m <- fil_m[fil_m$Age<90,]
+fil_f <- fil_f[fil_f$Age<90,]
+head(fil_m)
+head(fil_f)
+
+#GHANA --- GHA
+summary(gha_m)
+gha_m <- gha_m[gha_m$Year>1989,]
+gha_f <- gha_f[gha_f$Year>1989,]
+gha_m <- gha_m[gha_m$Age<90,]
+gha_f <- gha_f[gha_f$Age<90,]
+head(gha_m)
+head(gha_f)
+
+#INDIA --- IND
+summary(ind_m)
+ind_m <- ind_m[ind_m$Year>1989,]
+ind_f <- ind_f[ind_f$Year>1989,]
+ind_m <- ind_m[ind_m$Age<90,]
+ind_f <- ind_f[ind_f$Age<90,]
+head(ind_m)
+head(ind_f)
+
+#INDONESIA --- INDO
+summary(indo_m)
+indo_m <- indo_m[indo_m$Year>1989,]
+indo_f <- indo_f[indo_f$Year>1989,]
+indo_m <- indo_m[indo_m$Age<90,]
+indo_f <- indo_f[indo_f$Age<90,]
+head(indo_m)
+head(indo_f)
+
+#IRAN ---- IRA
+summary(ira_m)
+ira_m <- ira_m[ira_m$Year>1989,]
+ira_f <- ira_f[ira_f$Year>1989,]
+ira_m <- ira_m[ira_m$Age<90,]
+ira_f <- ira_f[ira_f$Age<90,]
+head(ira_m)
+head(ira_f)
+
+#IRAQ ---- IRAQ
+summary(iraq_m)
+iraq_m <- iraq_m[iraq_m$Year>1989,]
+iraq_f <- iraq_f[iraq_f$Year>1989,]
+iraq_m <- iraq_m[iraq_m$Age<90,]
+iraq_f <- iraq_f[iraq_f$Age<90,]
+head(iraq_m)
+head(iraq_f)
+
+#KENIA --- KEN
+summary(ken_m)
+ken_m <- ken_m[ken_m$Year>1989,]
+ken_f <- ken_f[ken_f$Year>1989,]
+ken_m <- ken_m[ken_m$Age<90,]
+ken_f <- ken_f[ken_f$Age<90,]
+head(ken_m)
+head(ken_f)
+
+#MALASIA --- MAL 
+summary(mal_m)
+mal_m <- mal_m[mal_m$Year>1989,]
+mal_f <- mal_f[mal_f$Year>1989,]
+mal_m <- mal_m[mal_m$Age<90,]
+mal_f <- mal_f[mal_f$Age<90,]
+head(mal_m)
+head(mal_f)
+
+#MOROCCO --- MOR
+summary(mor_m)
+mor_m <- mor_m[mor_m$Year>1989,]
+mor_f <- mor_f[mor_f$Year>1989,]
+mor_m <- mor_m[mor_m$Age<90,]
+mor_f <- mor_f[mor_f$Age<90,]
+head(mor_m)
+head(mor_f)
+
+#MOZAMBIQUE --- MOZ
+summary(moz_m)
+moz_m <- moz_m[moz_m$Year>1989,]
+moz_f <- moz_f[moz_f$Year>1989,]
+moz_m <- moz_m[moz_m$Age<90,]
+moz_f <- moz_f[moz_f$Age<90,]
+head(moz_m)
+head(moz_f)
+
+#MYANMAR --- MYA
+summary(mya_m)
+mya_m <- mya_m[mya_m$Year>1989,]
+mya_f <- mya_f[mya_f$Year>1989,]
+mya_m <- mya_m[mya_m$Age<90,]
+mya_f <- mya_f[mya_f$Age<90,]
+head(mya_m)
+head(mya_f)
+
+#NIGERIA --- NIG
+summary(nig_m)
+nig_m <- nig_m[nig_m$Year>1989,]
+nig_f <- nig_f[nig_f$Year>1989,]
+nig_m <- nig_m[nig_m$Age<90,]
+nig_f <- nig_f[nig_f$Age<90,]
+head(nig_m)
+head(nig_f)
+
+#PAKISTAN --- PAK
+summary(pak_m)
+pak_m <- pak_m[pak_m$Year>1989,]
+pak_f <- pak_f[pak_f$Year>1989,]
+pak_m <- pak_m[pak_m$Age<90,]
+pak_f <- pak_f[pak_f$Age<90,]
+head(pak_m)
+head(pak_f)
+
+#TANZANIA --- TAN 
+summary(tan_m)
+tan_m <- tan_m[tan_m$Year>1989,]
+tan_f <- tan_f[tan_f$Year>1989,]
+tan_m <- tan_m[tan_m$Age<90,]
+tan_f <- tan_f[tan_f$Age<90,]
+head(tan_m)
+head(tan_f)
+
+#R.D.CONGO --- CON 
+summary(con_m)
+con_m <- con_m[con_m$Year>1989,]
+con_f <- con_f[con_f$Year>1989,]
+con_m <- con_m[con_m$Age<90,]
+con_f <- con_f[con_f$Age<90,]
+head(con_m)
+head(con_f)
+
+#ARABIA SAUDI --- SAU 
+summary(sau_m)
+sau_m <- sau_m[sau_m$Year>1989,]
+sau_f <- sau_f[sau_f$Year>1989,]
+sau_m <- sau_m[sau_m$Age<90,]
+sau_f <- sau_f[sau_f$Age<90,]
+head(sau_m)
+head(sau_f)
+
+#SOUTH AFRICA --- SOU 
+summary(sou_m)
+sou_m <- sou_m[sou_m$Year>1989,]
+sou_f <- sou_f[sou_f$Year>1989,]
+sou_m <- sou_m[sou_m$Age<90,]
+sou_f <- sou_f[sou_f$Age<90,]
+head(sou_m)
+head(sou_f)
+
+#R.D. SUDAN ---- SUD
+summary(sud_m)
+sud_m <- sud_m[sud_m$Year>1989,]
+sud_f <- sud_f[sud_f$Year>1989,]
+sud_m <- sud_m[sud_m$Age<90,]
+sud_f <- sud_f[sud_f$Age<90,]
+head(sud_m)
+head(sud_f)
+
+#THAILANDIA ---- THA
+summary(tha_m)
+tha_m <- tha_m[tha_m$Year>1989,]
+tha_f <- tha_f[tha_f$Year>1989,]
+tha_m <- tha_m[tha_m$Age<90,]
+tha_f <- tha_f[tha_f$Age<90,]
+head(tha_m)
+head(tha_f)
+
+#TURQUIA ------- TUR
+summary(tur_m)
+tur_m <- tur_m[tur_m$Year>1989,]
+tur_f <- tur_f[tur_f$Year>1989,]
+tur_m <- tur_m[tur_m$Age<90,]
+tur_f <- tur_f[tur_f$Age<90,]
+head(tur_m)
+head(tur_f)
+
+#UGANDA -------- UGA
+summary(uga_m)
+uga_m <- uga_m[uga_m$Year>1989,]
+uga_f <- uga_f[uga_f$Year>1989,]
+uga_m <- uga_m[uga_m$Age<90,]
+uga_f <- uga_f[uga_f$Age<90,]
+head(uga_m)
+head(uga_f)
+
+#UZBEKISTAN ---- UZB
+summary(uzb_m)
+uzb_m <- uzb_m[uzb_m$Year>1989,]
+uzb_f <- uzb_f[uzb_f$Year>1989,]
+uzb_m <- uzb_m[uzb_m$Age<90,]
+uzb_f <- uzb_f[uzb_f$Age<90,]
+head(uzb_m)
+head(uzb_f)
+
+#VIETNAM ------- VIE
+summary(vie_m)
+vie_m <- vie_m[vie_m$Year>1989,]
+vie_f <- vie_f[vie_f$Year>1989,]
+vie_m <- vie_m[vie_m$Age<90,]
+vie_f <- vie_f[vie_f$Age<90,]
+head(vie_m)
+head(vie_f)
+
+#PERU ------- per
+summary(per_m)
+per_m <- per_m[per_m$Year>1989,]
+per_f <- per_f[per_f$Year>1989,]
+per_m <- per_m[per_m$Age<90,]
+per_f <- per_f[per_f$Age<90,]
+head(per_m)
+head(per_f)
+
+
+################################################################################################
+################################################################################################
+
+paises <- list()
+#Ahora voy a crear una lista que guarde todos los datos 
+pob
+
+paises <- list(AFG = list(hombres = afg_m, mujeres = afg_f), 
+               ALG = list(hombres = alg_m, mujeres = alg_f),
+               ANG = list(hombres = ang_m, mujeres = ang_f),
+               BAN = list(hombres = ban_m, mujeres = ban_f),
+               CHIN = list(hombres = chin_m, mujeres = chin_f),
+               EGY = list(hombres = egy_m, mujeres = egy_f),
+               ETH = list(hombres = eth_m, mujeres = eth_f),
+               FIL = list(hombres = fil_m, mujeres = fil_f),
+               GHA = list(hombres = gha_m, mujeres = gha_f),
+               IND = list(hombres = ind_m, mujeres = ind_f),
+               INDO = list(hombres = indo_m, mujeres = indo_f),
+               IRA = list(hombres = ira_m, mujeres = ira_f),
+               IRAQ = list(hombres = iraq_m, mujeres = iraq_f),
+               KEN = list(hombres = ken_m, mujeres = ken_f), 
+               MAL = list(hombres = mal_m, mujeres = mal_f),
+               MOR = list(hombres = mor_m, mujeres = mor_f),
+               MOZ = list(hombres = moz_m, mujeres = moz_f), 
+               MYA = list(hombres = mya_m, mujeres = mya_f), 
+               NIG = list(hombres = nig_m, mujeres = nig_f), 
+               PAK = list(hombres = pak_m, mujeres = pak_f), 
+               TAN = list(hombres = tan_m, mujeres = tan_f), 
+               CON = list(hombres = con_m, mujeres = con_f), 
+               SAU = list(hombres = sau_m, mujeres = sau_f), 
+               SOU = list(hombres = sou_m, mujeres = sou_f), 
+               SUD = list(hombres = sud_m, mujeres = sud_f), 
+               THA = list(hombres = tha_m, mujeres = tha_f), 
+               TUR = list(hombres = tur_m, mujeres = tur_f), 
+               UGA = list(hombres = uga_m, mujeres = uga_f), 
+               UZB = list(hombres = uzb_m, mujeres = uzb_f), 
+               VIE = list(hombres = vie_m, mujeres = vie_f),
+               PER = list(hombres = per_m, mujeres = per_f))
+
+#Ahora voy a generar los datos en forma de matriz para que sean más fáciles de extraer
+datos_mat <- list()
+edades <- c(0,1,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85)
+
+sex <- c("hombres", "mujeres")
+for(i in 1:31){
+  for(j in 1:2){
+  ages <- edades
+  nages <- length(ages)
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear, maxyear, by=5)
+  nyears <- length(years)
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$qxt <- matrix(paises[[i]][[j]]$qxt, nages, nyears, dimnames = list(ages, years))
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$mxt <- matrix(paises[[i]][[j]]$mxt, nages, nyears, dimnames = list(ages, years))
+  datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$ax <- matrix(paises[[i]][[j]]$ax, nages, nyears, dimnames = list(ages, years))
+  }
+}
+
+#Voy a guardar los datos de las poblaciones para que los podamos utilizar, si hay que generar gráficos o lo que sea 
+#dimelo y los apaño
+save(datos_mat, paises, file = "datosmuestra.RData")
+
+#Ahora una vez que tengo los datos voy a proceder a obtener las distintas tablas de vida, que me permitan sacar 
+#las distintas medidas que necesitamos, para ello desarrollo una función 
+#para generar la tabla de mortalidad 
+n_edad <- c(1, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+lifetable = datos_mat$AFG$hombres$qxt[,1]
+ax= datos_mat$AFG$hombres$ax[,1]
+mx = datos_mat$AFG$hombres$mxt[,1]
+
+tablamort <- function(lifetable, ax, mx){ 
+  lx <- vector("numeric", length(lifetable) )
+  dx <- vector("numeric", length(lifetable) )
+  Lx <- vector("numeric", length(lifetable) )
+  Tx <- vector("numeric", length(lifetable))
+  ex <- vector("numeric", length(lifetable) )
+  ax_ <- ax
+  lx[1] <- 100000 #contiene lx de la edad cero
+  for(i in 1: (length(lifetable) - 1)) {lx[i+1]<-lx[i]*(1-lifetable[i])}
+  for(i in 1: (length(lifetable))) {dx[i] <- lx[i]*lifetable[i]}
+  for(i in 1: (length(lifetable)-1)) {Lx[i] <- lx[i+1]*n_edad[i]+ax_[i]*dx[i]
+  Lx[length(lifetable)]= lx[length(lifetable)] / mx[length(lifetable)]}                       
+  for(i in 1: (length(lifetable))) {Tx[i]<-sum(Lx[i:length(lifetable)])}
+  for(i in 1: (length(lifetable))) {ex[i]<-Tx[i]/lx[i]} 
+  # lx[x+1] contiene lx de la edad x
+  devuelve<-cbind(x=edades,lx=lx,dx=dx,qx=lifetable,ex=ex, mx = mx, ax=ax_, Lx=Lx, Tx=Tx)          
+  devuelve
+}
+
+tablamort(lifetable = datos_mat$AFG$hombres$qxt[,1],
+          ax= datos_mat$AFG$hombres$ax[,1],
+          mx = datos_mat$AFG$hombres$mxt[,1])
+
+#Ahora creo la tabla de mortalidad para todos los países y sexos
+tablas_mort <- list()
+for(i in 1:31){
+  ages <- edades
+  nages <- length(ages)
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear,maxyear, 5)
+  nyears <- length(years)
+  tabla_hombres <- tabla_mujeres <- NULL
+     for(h in 1:nyears){
+       any <- rep(minyear + 5 *(h-1), nages)
+       tablaauxh <- cbind(any, tablamort(lifetable = datos_mat[[i]]$hombres$qxt[,h], 
+                                         ax = datos_mat[[i]]$hombres$ax[,h],
+                                         mx = datos_mat[[i]]$hombres$mxt[,h]))
+       tablaauxm <- cbind(any, tablamort(lifetable = datos_mat[[i]]$mujeres$qxt[,h], 
+                                         ax = datos_mat[[i]]$mujeres$ax[,h],
+                                         mx = datos_mat[[i]]$mujeres$mxt[,h]))
+
+       tabla_hombres <- rbind(tabla_hombres, tablaauxh)
+       tabla_mujeres <- rbind(tabla_mujeres, tablaauxm)
+     }
+  tablas_mort[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombres
+  tablas_mort[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujeres
+}
+#Ahora voy a recoger los calculos de la esperanza que me interesan que son x=0; 65; 70; 75   
+esperanzas.dm <- list()
+for(i in 1:31){
+  #i <- 1
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear,maxyear, 5)
+  nyears <- length(years)
+  esperanzas.dm[[paste0(pob[i])]]$e0 <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  esperanzas.dm[[paste0(pob[i])]]$e65 <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  esperanzas.dm[[paste0(pob[i])]]$e70 <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  esperanzas.dm[[paste0(pob[i])]]$e75 <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  for(j in 1: nyears){
+    esperanzas.dm[[i]]$e0[j, 1] <- tablas_mort[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.dm[[i]]$e0[j, 2] <- tablas_mort[[i]]$mujeres[(1+19*(j-1)),6]
+
+    esperanzas.dm[[i]]$e65[j, 1] <- tablas_mort[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.dm[[i]]$e65[j, 2] <- tablas_mort[[i]]$mujeres[(15+19*(j-1)),6]
+
+    esperanzas.dm[[i]]$e70[j, 1] <- tablas_mort[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.dm[[i]]$e70[j, 2] <- tablas_mort[[i]]$mujeres[(16+19*(j-1)),6]
+
+    esperanzas.dm[[i]]$e75[j, 1] <- tablas_mort[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.dm[[i]]$e75[j, 2] <- tablas_mort[[i]]$mujeres[(17+19*(j-1)),6]
+  }
+}
+
+capture.output(esperanzas.dm, file = "Esperanzasdm.txt")
+
+#DENTRO DE MUESTRA
+#También necesito una serie de indicadores más que son: 
+#Edad modal de muerte 
+#Esperanza de vida en 0, 65, 70, 75 (calculado ya)
+#Probabilidad de llegar vivo a los 65, 70 y 75
+#Coeficiente de Gini 
+#Desviacion estandar condicionada y Edad horizonte
+#Antes de meterme en el calculo de la edad modal, voy a incluir en los datos_mat
+for(i in 1:31){
+  for(j in 1:2){
+    ages <- edades
+    nages <- length(ages)
+    minyear <- min(paises[[i]]$hombres$Year)
+    maxyear <- max(paises[[i]]$hombres$Year)
+    years <- seq(minyear,maxyear, 5)
+    nyears <- length(years)
+    datos_mat[[paste0(pob[i])]][[paste0(sex[j])]]$dx <- matrix(tablas_mort[[i]][[j]][,4], nages, nyears, dimnames = list(ages, years))
+    
+  }
+}
+
+#EDAD MODAL
+edad_modal_DM <- list()
+int_edades <- c("<1", "1-5", "6-10", "11-15", "16-20", "21-25", "26-30", "31-35",
+                "36-40", "41-45", "46-50", "51-55", "56-60", "61-65", "66-70",
+                "71-75", "76-80", "81-85", "86-90")
+
+for(i in 1:31){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear,maxyear,5)
+  nyears <- length(years)
+  nages <- length(int_edades)
+  edad_int <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  ed_modal <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  for(h in 1:nyears){
+    ed_modal[h,1] <- which(datos_mat[[i]]$hombres$dx[(5:nages),h] == max(datos_mat[[i]]$hombres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal[h,2] <- which(datos_mat[[i]]$mujeres$dx[(5:nages),h] == max(datos_mat[[i]]$mujeres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+
+    edad_int[h,1] <- edades[(ed_modal[h,1])+4]
+    edad_int[h,2] <- edades[(ed_modal[h,2])+4]
+  }
+  edad_modal_DM[[paste0(pob[i])]] <- edad_int
+}
+plot(edades, datos_mat$AFG$hombres$dx[,1], type = "l", ylim=c(0, 20000))
+lines(edades, datos_mat$CHIN$hombres$dx[,1], type = "l")
+lines(edades, datos_mat$EGY$hombres$dx[,1], type = "l")
+lines(edades, datos_mat$MOR$hombres$dx[,1], type = "l")
+lines(edades, datos_mat$SOU$hombres$dx[,1], type = "l")
+lines(edades, datos_mat$TUR$hombres$dx[,1], type = "l")
+
+capture.output(edad_modal_DM, file = "EdadModal_DM.txt")
+int_edades
+#INDICE GINI 
+edad_media <- c(0.5, 3, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 
+                58, 63, 68, 73, 78, 83, 88)
+igini<-function(lifetable){ 
+  lx <- vector("numeric",length(lifetable) )
+  dx <- vector("numeric",length(lifetable) )
+  Ni0 <- vector("numeric",length(lifetable) )
+  Yi0 <- vector("numeric",length(lifetable) )
+  Gi0 <- vector("numeric", length(lifetable) )
+  Ni65 <- vector("numeric",length(5) )
+  Yi65 <- vector("numeric",length(5) )
+  Gi65 <- vector("numeric", length(5))
+  Ni70 <- vector("numeric",length(4) )
+  Yi70 <- vector("numeric",length(4) )
+  Gi70 <- vector("numeric", length(4))
+  Ni75 <- vector("numeric",length(3) )
+  Yi75 <- vector("numeric",length(3) )
+  Gi75 <- vector("numeric", length(3))
+  lx[1]<-100000 #contiene lx de la edad cero
+  for(i in 1: (length(lifetable)-1)) {lx[i+1]<-lx[i]*(1-lifetable[i])}
+  for(i in 1: (length(lifetable))) {dx[i]<-lx[i]*lifetable[i]}
+  #Para cada edad 0, 65, 70 y 75 necesito 
+  #0
+  for(i in 1: (length(lifetable))){ Ni0[i] <- sum(dx[1:i])/sum(dx)}
+  for(i in 1: (length(lifetable))){ Yi0[i] <- sum((dx[1:i]*edad_media[1:i]))/sum((dx*edad_media))}
+  Gi0[1] <- Ni0[1] * Yi0[1]
+  for(i in 2: (length(lifetable))){ Gi0[i] <- (Ni0[i]-Ni0[i-1])*(Yi0[i-1]+Yi0[i])}  
+  
+  #65
+  for(i in 1: 5){ Ni65[i] <- sum(dx[15:(14+i)])/sum(dx[15:length(lifetable)])}
+  for(i in 1: 5){ Yi65[i] <- sum((dx[15:(14+i)]*edad_media[15:(14+i)]))/sum((dx[15:length(lifetable)]*edad_media[15:length(lifetable)]))}
+  Gi65[1] <- Ni65[1] * Yi65[1]
+  for(i in 2: 5){ Gi65[i] <- (Ni65[i]-Ni65[i-1])*(Yi65[i-1]+Yi65[i])}  
+  
+  #70
+  for(i in 1: 4){ Ni70[i] <- sum(dx[16:(15+i)])/sum(dx[16:length(lifetable)])}
+  for(i in 1: 4){ Yi70[i] <- sum((dx[16:(15+i)]*edad_media[16:(15+i)]))/sum((dx[16:length(lifetable)]*edad_media[16:length(lifetable)]))}
+  Gi70[1] <- Ni70[1] * Yi70[1]
+  for(i in 2: 4){ Gi70[i] <- (Ni70[i]-Ni70[i-1])*(Yi70[i-1]+Yi70[i])}  
+  
+  #75
+  for(i in 1: 3){ Ni75[i] <- sum(dx[17:(16+i)])/sum(dx[17:length(lifetable)])}
+  for(i in 1: 3){ Yi75[i] <- sum((dx[17:(16+i)]*edad_media[17:(16+i)]))/sum((dx[17:length(lifetable)]*edad_media[17:length(lifetable)]))}
+  Gi75[1] <- Ni75[1] * Yi75[1]
+  for(i in 2: 3){ Gi75[i] <- (Ni75[i]-Ni75[i-1])*(Yi75[i-1]+Yi75[i])}  
+
+  result<-list(gini0=abs(1-sum(Gi0)), gini65=abs(1-sum(Gi65)),
+               gini70=abs(1-sum(Gi70)), gini75=abs(1-sum(Gi75)))
+  result
+}
+
+#Para hacer el indice de Gini igual que con la edad modal pero con el índice de Gini
+gini.index_DM <- list()
+tabl <- c("G0hombres", "G0mujeres", "G65hombres", "G65mujeres", 
+          "G60hombres", "G60mujeres", "G75hombres", "G75mujeres")
+
+for(i in 1:31){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear, maxyear, 5)
+  nyears <- length(years)
+  nages <- length(edades)
+  index.gin <- matrix(NA, nyears, 8, dimnames = list(years, tabl))
+  hombres <- mujeres <- NULL
+  for(h in 1:nyears){
+    hombres <- igini(lifetable = datos_mat[[i]]$hombres$qxt[,h])
+    mujeres <- igini(lifetable = datos_mat[[i]]$mujeres$qxt[,h])
+    index.gin[h, 1] <- hombres$gini0        
+    index.gin[h, 2] <- mujeres$gini0        
+    index.gin[h, 3] <- hombres$gini65        
+    index.gin[h, 4] <- mujeres$gini65        
+    index.gin[h, 5] <- hombres$gini70        
+    index.gin[h, 6] <- mujeres$gini70        
+    index.gin[h, 7] <- hombres$gini75        
+    index.gin[h, 8] <- mujeres$gini75        
+    }
+gini.index_DM[[paste0(pob[i])]] <- index.gin  
+}
+  
+capture.output(gini.index_DM, file = "Index.Gini.DM.txt")
+
+##########################################################################################
+#Ahora voy a proceder a la a calcular p65=l65/l0; p70=l70/l0; p75=l75/l0
+Pob.ll.vivo <- function(qx){ 
+  lx<- vector("numeric",length(lifetable) )
+  lx[1]<-100000 #contiene lx de la edad cero
+  for(i in 1: (length(qx)-1)) {lx[i+1]<-lx[i]*(1-qx[i])}
+  result <- list(p65 = lx[15]/lx[1], p70 = lx[16]/lx[1], p75 = lx[17]/lx[1])
+  }
+
+pob.llegarvivo_DM <- list()
+tabl.vivo <- c("p65hombres", "p65mujeres", "p70hombres", "p70mujeres", 
+               "p75hombres", "p75mujeres")
+for(i in 1:31){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear, maxyear, 5)
+  nyears <- length(years)
+  nages <- length(edades)
+  pobvivo <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vivo))
+  hombres <- mujeres <- NULL
+  for(h in 1:nyears){
+    hombres <- Pob.ll.vivo(qx = datos_mat[[i]]$hombres$qxt[,h])
+    mujeres <- Pob.ll.vivo(qx = datos_mat[[i]]$mujeres$qxt[,h])
+    pobvivo[h, 1] <- hombres$p65        
+    pobvivo[h, 2] <- mujeres$p65        
+    pobvivo[h, 3] <- hombres$p70        
+    pobvivo[h, 4] <- mujeres$p70        
+    pobvivo[h, 5] <- hombres$p75        
+    pobvivo[h, 6] <- mujeres$p75        
+  }
+  pob.llegarvivo_DM[[paste0(pob[i])]] <- pobvivo  
+}
+capture.output(pob.llegarvivo_DM, file = "Pobllvivo.DM.txt")
+
+##########################################################################################
+##########################################################################################
+#Conditional Standard deviation 
+qx <- datos_mat[[i]]$hombres$qxt[,1]
+ax <- paises[[i]]$hombres$ax[1:19]
+mx <- datos_mat[[i]]$hombres$mxt[,1]
+edad_media
+csdev <- function(qx, ax, mx){
+  lx <- vector("numeric", length(qx) )
+  dx <- vector("numeric", length(qx) )
+  Lx <- vector("numeric", length(qx) )
+  Tx <- vector("numeric", length(qx))
+  ex <- vector("numeric", length(qx) )
+  ax_ <- vector("numeric", length(qx))
+  Mx_ <- vector("numeric", length(qx))
+  ax_ <- ax
+  lx[1] <- 100000 #contiene lx de la edad cero
+  for(i in 1: (length(qx) - 1)) {lx[i+1]<-lx[i]*(1-qx[i])}
+  for(i in 1: (length(qx))) {dx[i] <- lx[i]*qx[i]}
+  for(i in 1: (length(qx)-1)) {Lx[i] <- lx[i+1]*n_edad[i]+ax_[i]*dx[i]
+  Lx[length(qx)]= lx[length(qx)] / mx[length(qx)]}                       
+  for(i in 1: (length(qx))) {Tx[i]<-sum(Lx[i:length(qx)])}
+  for(i in 1: (length(qx))) {ex[i]<-Tx[i]/lx[i]} 
+  # lx[x+1] contiene lx de la edad x
+  Mx0 <- ex[1] + edad_media[1]
+  Mx65 <- ex[15] + edad_media[15]
+  Mx70 <- ex[16] + edad_media[16]
+  Mx75 <- ex[17] + edad_media[17]
+  Sx0 <-  sqrt(sum(dx*(edad_media+ax-Mx0)^2)/lx[1])
+  Sx65 <-  sqrt(sum(dx[15:19]*(edad_media[15:19]+ax[15:19]-Mx65)^2)/lx[15])
+  Sx70 <-  sqrt(sum(dx[16:19]*(edad_media[16:19]+ax[16:19]-Mx70)^2)/lx[16])
+  Sx75 <-  sqrt(sum(dx[17:19]*(edad_media[17:19]+ax[17:19]-Mx75)^2)/lx[17])
+  devuelve<-list(s0 = Sx0, s65 = Sx65, s70 = Sx70, s75 = Sx75)
+  devuelve
+}
+
+
+con.std.des_DM <- list()
+tabl.std <- c("s0hombres", "s0mujeres", "s65hombres", "s65mujeres", 
+               "s70hombres", "s70mujeres", "s75hombres", "s75mujeres")
+for(i in 1:31){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear, maxyear, 5)
+  nyears <- length(years)
+  nages <- length(edades)
+  std.des <- matrix(NA, nyears, 8, dimnames = list(years, tabl.std))
+  hombres <- mujeres <- NULL
+  for(h in 1:nyears){
+    hombres <- csdev(qx = datos_mat[[i]]$hombres$qxt[,h], ax = datos_mat[[i]]$hombres$ax[,h],
+                     mx = datos_mat[[i]]$hombres$mxt[,h])
+    mujeres <- csdev(qx = datos_mat[[i]]$mujeres$qxt[,h], ax = datos_mat[[i]]$mujeres$ax[,h],
+                     mx = datos_mat[[i]]$mujeres$mxt[,h])
+    std.des[h, 1] <- hombres$s0        
+    std.des[h, 2] <- mujeres$s0        
+    std.des[h, 3] <- hombres$s65        
+    std.des[h, 4] <- mujeres$s65        
+    std.des[h, 5] <- hombres$s70        
+    std.des[h, 6] <- mujeres$s70        
+    std.des[h, 7] <- hombres$s75        
+    std.des[h, 8] <- mujeres$s75        
+    }
+  con.std.des_DM[[paste0(pob[i])]] <- std.des  
+}
+capture.output(con.std.des_DM, file = "ConStdDesvi.DM.txt")
+
+##########################################################################################
+##########################################################################################
+#Por último vamos a proceder a calcular Life Preparancy
+#Edad de preparación para la vida 
+Age <- edades
+qxt <- datos_mat[[i]]$hombres$qxt[,h]
+x <- 0
+z <- 0.5
+Life_preparancy <- function(qxt, x, z){
+  lx <- vector("numeric", length(qxt) )
+  lx[1] <- 100000 #contiene lx de la edad cero
+  for(t in 1: (length(qxt) - 1)) {lx[t+1]<-lx[t]*(1-qxt[t])}
+  ny <- sum(edades <= x)
+  lxz <- lx[ny]*(1-z)
+  xg <- sum(lx > lxz) - 1
+  xs <- 19 - sum(lx < lxz)
+  d1 <- lx[(xg+1)] - lxz
+  d2 <- lxz - lx[(xs+1)]
+  d2[is.na(d2)] <- 0
+  d <- d1 + d2
+  if(xg == 0){
+    yupi = 0 } else{yupi = edad_media[xg]}
+  hxz <- (d1/d)*edad_media[xs] + (d2/d)*yupi
+  hxz 
+}
+#Ahora una vez que tenemos este valor vamos a proceder a calcular esta variable para todos los paises y sexos 
+Eprep.vida_DM <- list()
+tabl.vida <- c("hage0.50%_hombres", "hage0.50%_mujeres", "hage65.25%_hombres", "hage65.25%_mujeres")
+for(i in 1:31){
+  minyear <- min(paises[[i]]$hombres$Year)
+  maxyear <- max(paises[[i]]$hombres$Year)
+  years <- seq(minyear, maxyear, 5)
+  nyears <- length(years)
+  prep.vid <- matrix(NA, nyears, 4, dimnames = list(years, tabl.vida))
+  hombres1 <- mujeres1 <- NULL
+  hombres2 <- mujeres2 <- NULL
+  for(h in 1:nyears){
+    hombres1 <- Life_preparancy(qxt = datos_mat[[i]]$hombres$qxt[,h],
+                                x = 0, z = 0.5)
+    hombres2 <- Life_preparancy(qxt = datos_mat[[i]]$hombres$qxt[,h],
+                                x = 65, z = 0.25)
+    mujeres1 <- Life_preparancy(qxt = datos_mat[[i]]$mujeres$qxt[,h],
+                                x = 0, z = 0.5)
+    mujeres2 <- Life_preparancy(qxt = datos_mat[[i]]$mujeres$qxt[,h],
+                                x = 65, z = 0.25)
+    prep.vid[h, 1] <- hombres1        
+    prep.vid[h, 2] <- mujeres1        
+    prep.vid[h, 3] <- hombres2        
+    prep.vid[h, 4] <- mujeres2        
+      }
+  Eprep.vida_DM[[paste0(pob[i])]] <- prep.vid  
+}
+capture.output(Eprep.vida_DM, file = "EdadPrepVida.DM.txt")
+
+#Ahora voy a guardar los indicadores dentro de muestra en un archivo de R
+save(esperanzas.dm, edad_modal_DM, gini.index_DM, pob.llegarvivo_DM, 
+     con.std.des_DM, Eprep.vida_DM, 
+     file = "indicadores_DM.RData")
+
+##########################################################################################
+#PROYECTAR QXT
+##########################################################################################
+library(StMoMo)
+#####################################################
+###########  LC-UNIFACTORIAL ########################
+#####################################################
+constLC <- function(ax, bx, kt, b0x, gc, wxt, ages){
+  c1 <- mean(kt[1, ], na.rm = TRUE)
+  c2 <- sum(bx[, 1], na.rm = TRUE)
+  list(ax = ax + c1 * bx, bx = bx / c2, kt =  c2 * (kt - c1))  
+}
+
+funcion.predict<-function(t,n,ax,bx,kt,lo){
+  #numero de a?os para los que queremos predicciones
+  #numero de edades para las que se predice 
+  #calculo de las predicciones 
+  lee <- matrix(rep(ax,t), nrow=n, ncol= t) + (matrix(bx, nrow=n, ncol= 1)%*%matrix(kt, nrow=1, ncol= t))
+  if(lo==1){ predicciones<-inv.logit(lee) }
+  else{ predicciones <- exp(lee) }
+  prueba <- list(pred=predicciones)
+  prueba
+}
+inv.logit<-function(x){exp(x)/(1+exp(x))}
+
+#Antes de correr el codigo a la matriz paises, le voy a incluir el data.frame lx
+for(i in 1:31){
+  for(j in 1:2){
+    paises[[paste0(pob[i])]][[paste0(sex[j])]]$lx <- tablas_mort[[i]][[j]][,3]
+  }
+}
+
+
+
+#Voy a crear un par de listas, una para el ajuste dentro de muestra y otra para la proyeccion fuera de muestra,
+#que contienen los valores de qxt de cada poblacion
+library(gnm)
+LCfit <- list()
+LCfut_mean <- list()
+LCfut_low <- list()
+LCfut_high <- list()
+
+for(j in 1:31){
+  for(i in 1:2){
+    nages <- length(edad_media)
+    minyear <- min(paises[[j]][[i]]$Year)
+    maxyear <- max(paises[[j]][[i]]$Year)
+    years <- seq(minyear,maxyear, 5)
+    nyears <- length(years)
+    wxt_LC <- genWeightMat(ages = nages, years = years, clip = 0)
+    
+    model <- gnm(paises[[j]][[i]]$qxt ~ - 1 + factor(paises[[j]][[i]]$Age),
+                 weights = paises[[j]][[i]]$lx, family=quasibinomial, data = paises[[j]][[i]])
+    
+    biplotStart <- residSVD(model, factor(paises[[j]][[i]]$Age), factor(paises[[j]][[i]]$Year),1)
+
+    ainih <- coef(model)+biplotStart[1]*biplotStart[20]*biplotStart[1:19]/biplotStart[1]  
+    binih <- biplotStart[1:19]/biplotStart[1]
+    kinih <- biplotStart[1]*biplotStart[20:(nyears+nages)]-biplotStart[1]*biplotStart[20]
+
+    lc1 <- gnm(paises[[j]][[i]]$qxt ~ - 1 + factor(paises[[j]][[i]]$Age) + Mult(factor(paises[[j]][[i]]$Age), factor(paises[[j]][[i]]$Year)), 
+                      weights = paises[[j]][[i]]$Exp, constrain= c(20, 39), constrainTo=c(1,0)
+                      ,family=quasibinomial, data = paises[[j]][[i]], start=c(ainih, binih, kinih))
+
+    ax <- as.numeric(coef(lc1)[1:19]+mean(c(0,coef(lc1)[40:(2*nages + nyears)])*sum(c(1,coef(lc1)[21:38])))*c(1,coef(lc1)[21:38])/sum(c(1,coef(lc1)[21:38])))
+    bx <- as.numeric(c(1,coef(lc1)[21:38])/sum(c(1,coef(lc1)[21:38])))
+    kt <- as.numeric(c(0,coef(lc1)[40:(2*nages + nyears)])*sum(c(1,coef(lc1)[21:38]))-mean(c(0,coef(lc1)[40:(2*nages + nyears)])*sum(c(1,coef(lc1)[21:38]))))
+
+    ktfut_mean <- forecast(auto.arima(kt), (3))$mean[1:(3)]
+    ktfut_high <- forecast(auto.arima(kt), (3))$upper[1:(3),2]
+    ktfut_low <- forecast(auto.arima(kt), (3))$lower[1:(3),2]
+    
+    qx_LC <- funcion.predict(nyears, nages, ax, bx, kt, 1)$pred
+    qxfut_LC_mean <- funcion.predict((3), nages, ax, bx, ktfut_mean, 1)$pred
+    qxfut_LC_high <- funcion.predict((3), nages, ax, bx, ktfut_high, 1)$pred
+    qxfut_LC_low <- funcion.predict((3), nages, ax, bx, ktfut_low, 1)$pred
+    
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$ax <- ax
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$bx <- bx
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- kt
+    LCfit[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCdm <- matrix(qx_LC, ncol=nyears, nrow=nages, dimnames = list(edades, years))
+    
+    LCfut_mean[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- ktfut_mean
+    LCfut_mean[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCfm <- matrix(qxfut_LC_mean, ncol=(3), nrow=nages, dimnames = list(edades, c(2020, 2025, 2030)))
+    LCfut_mean[[paste0(pob[j])]][[paste0(sex[i])]]$mxtLCfm <- 
+      matrix(qxfut_LC_mean, ncol=3, nrow=nages)/(matrix(n_edad, ncol=3, nrow=nages)-matrix(qxfut_LC_mean, ncol=3, nrow=nages)*
+                                                    (matrix(n_edad, ncol=3, nrow=nages)-matrix(datos_mat[[j]][[i]]$ax[,nyears],ncol=3, nrow=nages)))
+    
+    LCfut_high[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- ktfut_high
+    LCfut_high[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCfm <- matrix(qxfut_LC_high, ncol=(3), nrow=nages, dimnames = list(edades, c(2020, 2025, 2030)))
+    LCfut_high[[paste0(pob[j])]][[paste0(sex[i])]]$mxtLCfm <- 
+      matrix(qxfut_LC_high, ncol=3, nrow=nages)/(matrix(n_edad, ncol=3, nrow=nages)-matrix(qxfut_LC_high, ncol=3, nrow=nages)*
+                                                   (matrix(n_edad, ncol=3, nrow=nages)-matrix(datos_mat[[j]][[i]]$ax[,nyears],ncol=3, nrow=nages)))
+    
+    LCfut_low[[paste0(pob[j])]][[paste0(sex[i])]]$kt <- ktfut_low
+    LCfut_low[[paste0(pob[j])]][[paste0(sex[i])]]$qxtLCfm <- matrix(qxfut_LC_low, ncol=(3), nrow=nages, dimnames = list(edades, c(2020, 2025, 2030)))
+    LCfut_low[[paste0(pob[j])]][[paste0(sex[i])]]$mxtLCfm <- 
+      matrix(qxfut_LC_low, ncol=3, nrow=nages)/(matrix(n_edad, ncol=3, nrow=nages)-matrix(qxfut_LC_low, ncol=3, nrow=nages)*
+                                                   (matrix(n_edad, ncol=3, nrow=nages)-matrix(datos_mat[[j]][[i]]$ax[,nyears],ncol=3, nrow=nages)))
+    
+  }}
+
+#Salen 3 warnings que corresponden a que el gnm no ha conseguido obtener una solucion optima
+#pero no pasa nada, es normal 
+save(LCfit, LCfut_mean, LCfut_high, LCfut_low, 
+     file = "AjusteLC+qxtDM_y_FM+Intervalos.RData")
+
+library(scatterplot3d)
+library(rgl)
+
+#Voy a mostrar gráficamente las superficies de todo los países y sexos para certificar que todo esta correcto 
+j <- 30
+plot3d(edades, seq(min(paises[[j]][[1]]$Year), max(paises[[j]][[1]]$Year), by=5), log(LCfit[[j]][[1]]$qxtLCdm), col="red", type="n", zlab = "log(qxt)",ylab = "t=periodo",xlab = "edad = x")
+surface3d(edades, seq(min(paises[[j]][[1]]$Year), max(paises[[j]][[1]]$Year), by=5), log(LCfit[[j]][[1]]$qxtLCdm), col="blue")
+surface3d(edades, seq(min(paises[[j]][[2]]$Year), max(paises[[j]][[2]]$Year), by=5), log(LCfit[[j]][[2]]$qxtLCdm), col="red")
+
+#Ahora vamos a ver las proyecciones
+################################################################################################################
+#Los datos de argentina para la población total 
+
+#COMPROBAR que no hay qxt = 0
+#AFGHANISTAN --- AFG
+sum(is.nan(LCfut_mean$AFG$total$qxtLCfm))
+sum(is.nan(LCfut_mean$AFG$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$AFG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$AFG$total$qxtLCfm))
+sum(is.nan(LCfut_high$AFG$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$AFG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$AFG$total$qxtLCfm))
+sum(is.nan(LCfut_low$AFG$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$AFG$mujeres$qxtLCfm))
+
+#ALGERIA -- ALG
+sum(is.nan(LCfut_mean$ALG$total$qxtLCfm))
+sum(is.nan(LCfut_mean$ALG$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$ALG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$ALG$total$qxtLCfm))
+sum(is.nan(LCfut_high$ALG$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$ALG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$ALG$total$qxtLCfm))
+sum(is.nan(LCfut_low$ALG$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$ALG$mujeres$qxtLCfm))
+
+#ANGOLA -- ANG
+sum(is.nan(LCfut_mean$ANG$total$qxtLCfm))
+sum(is.nan(LCfut_mean$ANG$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$ANG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$ANG$total$qxtLCfm))
+sum(is.nan(LCfut_high$ANG$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$ANG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$ANG$total$qxtLCfm))
+sum(is.nan(LCfut_low$ANG$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$ANG$mujeres$qxtLCfm))
+
+#BANGLADESH -- BAN
+sum(is.nan(LCfut_mean$BAN$total$qxtLCfm))
+sum(is.nan(LCfut_mean$BAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$BAN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$BAN$total$qxtLCfm))
+sum(is.nan(LCfut_high$BAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$BAN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$BAN$total$qxtLCfm))
+sum(is.nan(LCfut_low$BAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$BAN$mujeres$qxtLCfm))
+
+#CHINA -- CHIN
+sum(is.nan(LCfut_mean$CHIN$total$qxtLCfm))
+sum(is.nan(LCfut_mean$CHIN$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$CHIN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$CHIN$total$qxtLCfm))
+sum(is.nan(LCfut_high$CHIN$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$CHIN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$CHIN$total$qxtLCfm))
+sum(is.nan(LCfut_low$CHIN$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$CHIN$mujeres$qxtLCfm))
+
+#EGY ---- EGYPTO
+sum(is.nan(LCfut_mean$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_mean$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$EGY$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$mujeres$qxtLCfm))
+
+#ETHIOPIA -- ETH
+sum(is.nan(LCfut_mean$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_mean$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$EGY$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$mujeres$qxtLCfm))
+
+#FILIPINAS --- FIL
+sum(is.nan(LCfut_mean$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_mean$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$EGY$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$EGY$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$total$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$EGY$mujeres$qxtLCfm))
+
+#GHANA --- GHA
+sum(is.nan(LCfut_mean$GHA$total$qxtLCfm))
+sum(is.nan(LCfut_mean$GHA$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$GHA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$GHA$total$qxtLCfm))
+sum(is.nan(LCfut_high$GHA$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$GHA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$GHA$total$qxtLCfm))
+sum(is.nan(LCfut_low$GHA$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$GHA$mujeres$qxtLCfm))
+
+#INDIA --- IND
+sum(is.nan(LCfut_mean$IND$total$qxtLCfm))
+sum(is.nan(LCfut_mean$IND$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$IND$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$IND$total$qxtLCfm))
+sum(is.nan(LCfut_high$IND$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$IND$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$IND$total$qxtLCfm))
+sum(is.nan(LCfut_low$IND$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$IND$mujeres$qxtLCfm))
+
+#INDONESIA --- INDO
+sum(is.nan(LCfut_mean$INDO$total$qxtLCfm))
+sum(is.nan(LCfut_mean$INDO$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$INDO$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$INDO$total$qxtLCfm))
+sum(is.nan(LCfut_high$INDO$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$INDO$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$INDO$total$qxtLCfm))
+sum(is.nan(LCfut_low$INDO$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$INDO$mujeres$qxtLCfm))
+
+#IRAN ---- IRA
+sum(is.nan(LCfut_mean$IRA$total$qxtLCfm))
+sum(is.nan(LCfut_mean$IRA$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$IRA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$IRA$total$qxtLCfm))
+sum(is.nan(LCfut_high$IRA$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$IRA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$IRA$total$qxtLCfm))
+sum(is.nan(LCfut_low$IRA$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$IRA$mujeres$qxtLCfm))
+
+#IRAQ ---- IRAQ
+sum(is.nan(LCfut_mean$IRAQ$total$qxtLCfm))
+sum(is.nan(LCfut_mean$IRAQ$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$IRAQ$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$IRAQ$total$qxtLCfm))
+sum(is.nan(LCfut_high$IRAQ$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$IRAQ$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$IRAQ$total$qxtLCfm))
+sum(is.nan(LCfut_low$IRAQ$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$IRAQ$mujeres$qxtLCfm))
+
+#KENIA --- KEN
+sum(is.nan(LCfut_mean$KEN$total$qxtLCfm))
+sum(is.nan(LCfut_mean$KEN$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$KEN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$KEN$total$qxtLCfm))
+sum(is.nan(LCfut_high$KEN$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$KEN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$KEN$total$qxtLCfm))
+sum(is.nan(LCfut_low$KEN$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$KEN$mujeres$qxtLCfm))
+
+#MALASIA --- MAL 
+sum(is.nan(LCfut_mean$MAL$total$qxtLCfm))
+sum(is.nan(LCfut_mean$MAL$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$MAL$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$MAL$total$qxtLCfm))
+sum(is.nan(LCfut_high$MAL$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$MAL$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$MAL$total$qxtLCfm))
+sum(is.nan(LCfut_low$MAL$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$MAL$mujeres$qxtLCfm))
+
+#MOROCCO --- MOR
+sum(is.nan(LCfut_mean$MOR$total$qxtLCfm))
+sum(is.nan(LCfut_mean$MOR$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$MOR$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$MOR$total$qxtLCfm))
+sum(is.nan(LCfut_high$MOR$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$MOR$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$MOR$total$qxtLCfm))
+sum(is.nan(LCfut_low$MOR$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$MOR$mujeres$qxtLCfm))
+
+#MOZAMBIQUE --- MOZ
+sum(is.nan(LCfut_mean$MOZ$total$qxtLCfm))
+sum(is.nan(LCfut_mean$MOZ$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$MOZ$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$MOZ$total$qxtLCfm))
+sum(is.nan(LCfut_high$MOZ$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$MOZ$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$MOZ$total$qxtLCfm))
+sum(is.nan(LCfut_low$MOZ$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$MOZ$mujeres$qxtLCfm))
+
+#MYANMAR --- MYA
+sum(is.nan(LCfut_mean$MYA$total$qxtLCfm))
+sum(is.nan(LCfut_mean$MYA$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$MYA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$MYA$total$qxtLCfm))
+sum(is.nan(LCfut_high$MYA$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$MYA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$MYA$total$qxtLCfm))
+sum(is.nan(LCfut_low$MYA$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$MYA$mujeres$qxtLCfm))
+
+#NIGERIA --- NIG
+sum(is.nan(LCfut_mean$NIG$total$qxtLCfm))
+sum(is.nan(LCfut_mean$NIG$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$NIG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$NIG$total$qxtLCfm))
+sum(is.nan(LCfut_high$NIG$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$NIG$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$NIG$total$qxtLCfm))
+sum(is.nan(LCfut_low$NIG$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$NIG$mujeres$qxtLCfm))
+
+#PAKISTAN --- PAK
+sum(is.nan(LCfut_mean$PAK$total$qxtLCfm))
+sum(is.nan(LCfut_mean$PAK$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$PAK$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$PAK$total$qxtLCfm))
+sum(is.nan(LCfut_high$PAK$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$PAK$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$PAK$total$qxtLCfm))
+sum(is.nan(LCfut_low$PAK$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$PAK$mujeres$qxtLCfm))
+
+#TANZANIA --- TAN 
+sum(is.nan(LCfut_mean$TAN$total$qxtLCfm))
+sum(is.nan(LCfut_mean$TAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$TAN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$TAN$total$qxtLCfm))
+sum(is.nan(LCfut_high$TAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$TAN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$TAN$total$qxtLCfm))
+sum(is.nan(LCfut_low$TAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$TAN$mujeres$qxtLCfm))
+
+#R.D.CONGO --- CON 
+sum(is.nan(LCfut_mean$CON$total$qxtLCfm))
+sum(is.nan(LCfut_mean$CON$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$CON$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$CON$total$qxtLCfm))
+sum(is.nan(LCfut_high$CON$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$CON$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$CON$total$qxtLCfm))
+sum(is.nan(LCfut_low$CON$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$CON$mujeres$qxtLCfm))
+
+#ARABIA SAUDI --- SAU 
+sum(is.nan(LCfut_mean$SAU$total$qxtLCfm))
+sum(is.nan(LCfut_mean$SAU$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$SAU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$SAU$total$qxtLCfm))
+sum(is.nan(LCfut_high$SAU$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$SAU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$SAU$total$qxtLCfm))
+sum(is.nan(LCfut_low$SAU$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$SAU$mujeres$qxtLCfm))
+
+#SOUTH AFRICA --- SOU 
+sum(is.nan(LCfut_mean$SOU$total$qxtLCfm))
+sum(is.nan(LCfut_mean$SOU$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$SOU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$SOU$total$qxtLCfm))
+sum(is.nan(LCfut_high$SOU$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$SOU$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$SOU$total$qxtLCfm))
+sum(is.nan(LCfut_low$SOU$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$SOU$mujeres$qxtLCfm))
+
+#R.D. SUDAN ---- SUD
+sum(is.nan(LCfut_mean$SUD$total$qxtLCfm))
+sum(is.nan(LCfut_mean$SUD$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$SUD$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$SUD$total$qxtLCfm))
+sum(is.nan(LCfut_high$SUD$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$SUD$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$SUD$total$qxtLCfm))
+sum(is.nan(LCfut_low$SUD$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$SUD$mujeres$qxtLCfm))
+
+#THAILANDIA ---- THA
+sum(is.nan(LCfut_mean$TAN$total$qxtLCfm))
+sum(is.nan(LCfut_mean$TAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$TAN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$TAN$total$qxtLCfm))
+sum(is.nan(LCfut_high$TAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$TAN$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$TAN$total$qxtLCfm))
+sum(is.nan(LCfut_low$TAN$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$TAN$mujeres$qxtLCfm))
+
+#TURQUIA ------- TUR
+sum(is.nan(LCfut_mean$TUR$total$qxtLCfm))
+sum(is.nan(LCfut_mean$TUR$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$TUR$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$TUR$total$qxtLCfm))
+sum(is.nan(LCfut_high$TUR$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$TUR$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$TUR$total$qxtLCfm))
+sum(is.nan(LCfut_low$TUR$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$TUR$mujeres$qxtLCfm))
+
+#UGANDA -------- UGA
+sum(is.nan(LCfut_mean$UGA$total$qxtLCfm))
+sum(is.nan(LCfut_mean$UGA$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$UGA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$UGA$total$qxtLCfm))
+sum(is.nan(LCfut_high$UGA$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$UGA$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$UGA$total$qxtLCfm))
+sum(is.nan(LCfut_low$UGA$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$UGA$mujeres$qxtLCfm))
+
+#UZBEKISTAN ---- UZB
+sum(is.nan(LCfut_mean$UZB$total$qxtLCfm))
+sum(is.nan(LCfut_mean$UZB$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$UZB$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$UZB$total$qxtLCfm))
+sum(is.nan(LCfut_high$UZB$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$UZB$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$UZB$total$qxtLCfm))
+sum(is.nan(LCfut_low$UZB$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$UZB$mujeres$qxtLCfm))
+
+#VIETNAM ------- VIE
+sum(is.nan(LCfut_mean$VIE$total$qxtLCfm))
+sum(is.nan(LCfut_mean$VIE$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$VIE$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$VIE$total$qxtLCfm))
+sum(is.nan(LCfut_high$VIE$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$VIE$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$VIE$total$qxtLCfm))
+sum(is.nan(LCfut_low$VIE$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$VIE$mujeres$qxtLCfm))
+
+#PERU ------- per
+sum(is.nan(LCfut_mean$per$total$qxtLCfm))
+sum(is.nan(LCfut_mean$per$hombres$qxtLCfm))
+sum(is.nan(LCfut_mean$per$mujeres$qxtLCfm))
+sum(is.nan(LCfut_high$per$total$qxtLCfm))
+sum(is.nan(LCfut_high$per$hombres$qxtLCfm))
+sum(is.nan(LCfut_high$per$mujeres$qxtLCfm))
+sum(is.nan(LCfut_low$per$total$qxtLCfm))
+sum(is.nan(LCfut_low$per$hombres$qxtLCfm))
+sum(is.nan(LCfut_low$per$mujeres$qxtLCfm))
+
+
+################################################################################################################
+#Ahora una vez que tengo las qxt proyectadas ya puedo calcular el resto de la tabla de mortalidad para los 
+#valores futuros de qxt 
+tablas_mort_proyectada <- list()
+tablas_mort_proyectada_low <- list()
+tablas_mort_proyectada_high <- list()
+for(i in 1:31){
+  ages <- edades
+  nages <- length(ages)
+  minyear_dm <- min(paises[[i]]$hombres$Year)
+  maxyear_dm <- max(paises[[i]]$hombres$Year)
+  years_dm <- seq(minyear_dm,maxyear_dm,5)
+  minyear_fm <- 2020
+  nyears_dm <- length(years_dm)
+  years_fm <- c(2020,2025,2030)
+  nyears_fm <- length(years_fm)
+  tabla_hombres <- tabla_mujeres <- NULL
+  tabla_hombreshig <- tabla_mujereshig <- NULL
+  tabla_hombreslow <- tabla_mujereslow <- NULL
+  mxt_fue_hom <- mxt_fue_muj <- NULL
+  mxt_fue_hom.low <- mxt_fue_muj.low <- NULL
+  mxt_fue_hom.high <- mxt_fue_muj.high <- NULL
+  for(h in 1:nyears_fm){
+    any <- rep(minyear_fm + 5*(h-1) , nages)
+    #mean
+    tablaauxh <- cbind(any, tablamort(lifetable = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$hombres$ax[,nyears_dm], 
+                                      mx = matrix(LCfut_mean[[i]]$hombres$mxtLCfm, ncol=nyears_fm, nrow = nages)[,h]))
+    tablaauxm <- cbind(any, tablamort(lifetable = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$mujeres$ax[,nyears_dm], 
+                                      mx = matrix(LCfut_mean[[i]]$mujeres$mxtLCfm, ncol=nyears_fm, nrow = nages)[,h]))
+
+    tabla_hombres <- rbind(tabla_hombres, tablaauxh)
+    tabla_mujeres <- rbind(tabla_mujeres, tablaauxm)
+    #high
+    tabla_ahhig <- cbind(any, tablamort(lifetable = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$hombres$ax[,nyears_dm], 
+                                      mx = matrix(LCfut_high[[i]]$hombres$mxtLCfm, ncol=nyears_fm, nrow = nages)[,h]))
+    tabla_muhig <- cbind(any, tablamort(lifetable = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$mujeres$ax[,nyears_dm], 
+                                      mx = matrix(LCfut_high[[i]]$mujeres$mxtLCfm, ncol=nyears_fm, nrow = nages)[,h]))
+
+    tabla_hombreshig <- rbind(tabla_hombreshig, tabla_ahhig)
+    tabla_mujereshig <- rbind(tabla_mujereshig, tabla_muhig)
+    #low
+    tabla_hlow <- cbind(any, tablamort(lifetable = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$hombres$ax[,nyears_dm], 
+                                      mx = matrix(LCfut_low[[i]]$hombres$mxtLCfm, ncol=nyears_fm, nrow = nages)[,h]))
+    tabla_mlow <- cbind(any, tablamort(lifetable = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol=nyears_fm, nrow=nages)[,h], 
+                                      ax = datos_mat[[i]]$mujeres$ax[,nyears_dm], 
+                                      mx = matrix(LCfut_low[[i]]$mujeres$mxtLCfm, ncol=nyears_fm, nrow = nages)[,h]))
+
+    tabla_hombreslow <- rbind(tabla_hombreslow, tabla_hlow)
+    tabla_mujereslow <- rbind(tabla_mujereslow, tabla_mlow)
+
+  }
+  tablas_mort_proyectada[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombres
+  tablas_mort_proyectada[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujeres
+  #HIGH
+  tablas_mort_proyectada_high[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombreshig
+  tablas_mort_proyectada_high[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujereshig
+  #LOW
+  tablas_mort_proyectada_low[[paste0(pob[i])]][[paste0("hombres")]] <- tabla_hombreslow
+  tablas_mort_proyectada_low[[paste0(pob[i])]][[paste0("mujeres")]] <- tabla_mujereslow
+}
+
+#Ahora voy a pasarlo a los resultados que me interesan 
+#Ahora voy a recoger los calculos de la esperanza que me interesan que son x=0; 65; 70; 75   
+esperanzas.fm <- list()
+esperanzas.fm_low <- list()
+esperanzas.fm_hig <- list()
+tabla.esperanzas <- c("e0hombres", "e0mujeres", "e65hombres", "e65mujeres",
+                      "e70hombres", "e70mujeres", "e75hombres", "e75mujeres")
+
+for(i in 1:31){
+  maxyear <- max(paises[[i]]$hombres$Year) + 1
+  years <- c(2020, 2025, 2030)
+  nyears <- length(years)
+  esperanzas.fm[[paste0(pob[i])]] <- matrix(NA, nyears, 8, dimnames = list(years, tabla.esperanzas))
+  esperanzas.fm_hig[[paste0(pob[i])]] <- matrix(NA, nyears, 8, dimnames = list(years, tabla.esperanzas))
+  esperanzas.fm_low[[paste0(pob[i])]] <- matrix(NA, nyears, 8, dimnames = list(years, tabla.esperanzas))
+  for(j in 1: nyears){
+    esperanzas.fm[[i]][j, 1] <- tablas_mort_proyectada[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 2] <- tablas_mort_proyectada[[i]]$mujeres[(1+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 3] <- tablas_mort_proyectada[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 4] <- tablas_mort_proyectada[[i]]$mujeres[(15+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 5] <- tablas_mort_proyectada[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 6] <- tablas_mort_proyectada[[i]]$mujeres[(16+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 7] <- tablas_mort_proyectada[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.fm[[i]][j, 8] <- tablas_mort_proyectada[[i]]$mujeres[(17+19*(j-1)),6]
+    #HIGH
+    esperanzas.fm_hig[[i]][j, 1] <- tablas_mort_proyectada_high[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 2] <- tablas_mort_proyectada_high[[i]]$mujeres[(1+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 3] <- tablas_mort_proyectada_high[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 4] <- tablas_mort_proyectada_high[[i]]$mujeres[(15+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 5] <- tablas_mort_proyectada_high[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 6] <- tablas_mort_proyectada_high[[i]]$mujeres[(16+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 7] <- tablas_mort_proyectada_high[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.fm_hig[[i]][j, 8] <- tablas_mort_proyectada_high[[i]]$mujeres[(17+19*(j-1)),6]
+    #LOW
+    esperanzas.fm_low[[i]][j, 1] <- tablas_mort_proyectada_low[[i]]$hombres[(1+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 2] <- tablas_mort_proyectada_low[[i]]$mujeres[(1+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 3] <- tablas_mort_proyectada_low[[i]]$hombres[(15+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 4] <- tablas_mort_proyectada_low[[i]]$mujeres[(15+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 5] <- tablas_mort_proyectada_low[[i]]$hombres[(16+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 6] <- tablas_mort_proyectada_low[[i]]$mujeres[(16+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 7] <- tablas_mort_proyectada_low[[i]]$hombres[(17+19*(j-1)),6]
+    esperanzas.fm_low[[i]][j, 8] <- tablas_mort_proyectada_low[[i]]$mujeres[(17+19*(j-1)),6]
+    }
+}
+
+capture.output(esperanzas.fm, file = "Esperanzasfm.txt")
+capture.output(esperanzas.fm_hig, file = "Esperanzasfm_hig.txt")
+capture.output(esperanzas.fm_low, file = "Esperanzasfm_low.txt")
+
+########################################################################################################
+########################################################################################################
+
+#EDAD MODAL fuera de muestra
+#Primero voy a transformar el data.frame de las dxt de la tabla de mortalidad en una matriz 
+#Ahora voy a generar los datos en forma de matriz para que sean más fáciles de extraer
+#Ya aprovecho y transformo todas las variables
+int_edades
+datos_mat_fm <- list()
+datos_mat_fm_high <- list()
+datos_mat_fm_low <- list()
+for(i in 1:31){
+  for(j in 1:2){
+    ages <- edades
+    nages <- length(ages)
+    minyear <- 2020
+    maxyear <- 2030
+    years <- c(minyear, 2025, maxyear)
+    nyears <- length(years)
+    #mean
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$lx <- matrix(tablas_mort_proyectada[[i]][[j]][,3], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$dx <- matrix(tablas_mort_proyectada[[i]][[j]][,4], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$qx <- matrix(tablas_mort_proyectada[[i]][[j]][,5], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$ex <- matrix(tablas_mort_proyectada[[i]][[j]][,6], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm[[paste0(pob[i])]][[paste0(sex[j])]]$mx <- matrix(LCfut_mean[[i]][[j]]$mxtLCfm, nages, nyears, dimnames = list(ages, years))
+    #high
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$lx <- matrix(tablas_mort_proyectada_high[[i]][[j]][,3], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$dx <- matrix(tablas_mort_proyectada_high[[i]][[j]][,4], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$qx <- matrix(tablas_mort_proyectada_high[[i]][[j]][,5], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$ex <- matrix(tablas_mort_proyectada_low[[i]][[j]][,6], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_high[[paste0(pob[i])]][[paste0(sex[j])]]$mx <- matrix(LCfut_high[[i]][[j]]$mxtLCfm, nages, nyears, dimnames = list(ages, years))
+    #mean
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$lx <- matrix(tablas_mort_proyectada_low[[i]][[j]][,3], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$dx <- matrix(tablas_mort_proyectada_low[[i]][[j]][,4], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$qx <- matrix(tablas_mort_proyectada_low[[i]][[j]][,5], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$ex <- matrix(tablas_mort_proyectada_low[[i]][[j]][,6], nages, nyears, dimnames = list(ages, years))
+    datos_mat_fm_low[[paste0(pob[i])]][[paste0(sex[j])]]$mx <- matrix(LCfut_low[[i]][[j]]$mxtLCfm, nages, nyears, dimnames = list(ages, years))
+    
+  }
+}
+
+int_edades
+edad_modal_fm <- list()
+edad_modal_fm_low <- list()
+edad_modal_fm_high <- list()
+for(i in 1:31){
+  minyear <- 2020
+  maxyear <- 2030
+  years <- c(minyear, 2025, maxyear)
+  nyears <- length(years)
+  nages <- length(ages)
+  ed_modal <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  ed_modal_low <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  ed_modal_high <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  ed_int <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  ed_int_low <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  ed_int_high <- matrix(NA, nyears, 2, dimnames = list(years, sex))
+  for(h in 1:nyears){
+    ed_modal[h,1] <- which(datos_mat_fm[[i]]$hombres$dx[(5:nages),h] == max(datos_mat_fm[[i]]$hombres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal[h,2] <- which(datos_mat_fm[[i]]$mujeres$dx[(5:nages),h] == max(datos_mat_fm[[i]]$mujeres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+
+    ed_int[h,1] <- edades[(ed_modal[h,1]+4)]
+    ed_int[h,2] <- edades[(ed_modal[h,2]+4)]
+
+    #LOW
+    ed_modal_low[h,1] <- which(datos_mat_fm_low[[i]]$hombres$dx[(5:nages),h] == max(datos_mat_fm_low[[i]]$hombres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal_low[h,2] <- which(datos_mat_fm_low[[i]]$mujeres$dx[(5:nages),h] == max(datos_mat_fm_low[[i]]$mujeres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+
+    ed_int_low[h,1] <- edades[(ed_modal_low[h,1]+4)]
+    ed_int_low[h,2] <- edades[(ed_modal_low[h,2]+4)]
+
+    #HIGH
+    ed_modal_high[h,1] <- which(datos_mat_fm_high[[i]]$hombres$dx[(5:nages),h] == max(datos_mat_fm_high[[i]]$hombres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+    ed_modal_high[h,2] <- which(datos_mat_fm_high[[i]]$mujeres$dx[(5:nages),h] == max(datos_mat_fm_high[[i]]$mujeres$dx[(5:nages),h]), arr.ind=TRUE)[1]
+
+    ed_int_high[h,1] <- edades[(ed_modal_high[h,1]+4)]
+    ed_int_high[h,2] <- edades[(ed_modal_high[h,2]+4)]
+
+}
+  edad_modal_fm[[paste0(pob[i])]] <- ed_int
+  edad_modal_fm_low[[paste0(pob[i])]] <- ed_int_low
+  edad_modal_fm_high[[paste0(pob[i])]] <- ed_int_high
+}
+
+capture.output(edad_modal_fm, file = "edad_modal_fm.txt")
+capture.output(edad_modal_fm_high, file = "edad_modal_fm_high.txt")
+capture.output(edad_modal_fm_low, file = "edad_modal_fm_low.txt")
+
+###################################################################################################
+###################################################################################################
+#Ahora vamos con el Indice de Gini fuera de muestra
+gini.index_FM <- list()
+gini.index_FM.low <- list()
+gini.index_FM.high <- list()
+tabl <- c("G0hombres", "G0mujeres", "G65hombres", "G65mujeres",
+          "G60hombres", "G60mujeres", "G75hombres", "G75mujeres")
+i <- 1
+for(i in 1:31){
+  maxyear <- 2020 
+  years <- c(2020, 2025, 2030)
+  nyears_fm <- length(years)
+  nyears_dm <- length(seq(min(paises[[i]]$hombres$Year),(max(paises[[i]]$hombres$Year)),5))
+  nages <- length(edades)
+  index.gin <- matrix(NA, nyears_fm, 8, dimnames = list(years, tabl))
+  index.gin.low <- matrix(NA, nyears_fm, 8, dimnames = list(years, tabl))
+  index.gin.high <- matrix(NA, nyears_fm, 8, dimnames = list(years, tabl))
+  hombres <-  mujeres <- total <- NULL
+  hombres.low <- mujeres.low <- NULL
+  hombres.high <- mujeres.high <- NULL
+  for(h in 1:nyears_fm){
+    #MEAN
+    hombres <- igini(lifetable = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    mujeres <- igini(lifetable = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    index.gin[h, 1] <- hombres$gini0        
+    index.gin[h, 2] <- mujeres$gini0        
+    index.gin[h, 3] <- hombres$gini65        
+    index.gin[h, 4] <- mujeres$gini65        
+    index.gin[h, 5] <- hombres$gini70        
+    index.gin[h, 6] <- mujeres$gini70        
+    index.gin[h, 7] <- hombres$gini75        
+    index.gin[h, 8] <- mujeres$gini75        
+    #LOW
+    hombres.low <- igini(lifetable = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    mujeres.low <- igini(lifetable = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    index.gin.low[h, 1] <- hombres.low$gini0        
+    index.gin.low[h, 2] <- mujeres.low$gini0        
+    index.gin.low[h, 3] <- hombres.low$gini65        
+    index.gin.low[h, 4] <- mujeres.low$gini65        
+    index.gin.low[h, 5] <- hombres.low$gini70        
+    index.gin.low[h, 6] <- mujeres.low$gini70        
+    index.gin.low[h, 7] <- hombres.low$gini75        
+    index.gin.low[h, 8] <- mujeres.low$gini75        
+    #HIGH
+    hombres.high <- igini(lifetable = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    mujeres.high <- igini(lifetable = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h])
+    index.gin.high[h, 1] <- hombres.high$gini0        
+    index.gin.high[h, 2] <- mujeres.high$gini0        
+    index.gin.high[h, 3] <- hombres.high$gini65        
+    index.gin.high[h, 4] <- mujeres.high$gini65        
+    index.gin.high[h, 5] <- hombres.high$gini70        
+    index.gin.high[h, 6] <- mujeres.high$gini70        
+    index.gin.high[h, 7] <- hombres.high$gini75        
+    index.gin.high[h, 8] <- mujeres.high$gini75        
+
+  }
+  gini.index_FM[[paste0(pob[i])]] <- index.gin  
+  gini.index_FM.low[[paste0(pob[i])]] <- index.gin.low  
+  gini.index_FM.high[[paste0(pob[i])]] <- index.gin.high  
+}
+
+capture.output(gini.index_FM, file = "Index.Gini.FM.txt")
+capture.output(gini.index_FM.low, file = "Index.Gini.FM.low.txt")
+capture.output(gini.index_FM.high, file = "Index.Gini.FM.high.txt")
+
+##########################################################################################
+##########################################################################################
+#Ahora voy a proceder a la a calcular p65=l65/l0; p70=l70/l0; p75=l75/l0
+pob.llegarvivo_FM <- list()
+pob.llegarvivo_FM.low <- list()
+pob.llegarvivo_FM.high <- list()
+tabl.vivo <- c("p65hombres", "p65mujeres", "p70hombres", "p70mujeres",  
+               "p75hombres", "p75mujeres")
+for(i in 1:31){
+  maxyear <- 2020
+  years <- c(2020, 2025, 2030)
+  nyears <- length(years)
+  nages <- length(edades)
+  pobvivo <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vivo))
+  pobvivo.low <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vivo))
+  pobvivo.high <- matrix(NA, nyears, 6, dimnames = list(years, tabl.vivo))
+  hombres <- mujeres <-  NULL
+  hombres.low <- mujeres.low <- NULL
+  hombres.high <- mujeres.high <- NULL
+  for(h in 1:nyears){
+    #Mean
+    hombres <- Pob.ll.vivo(qx = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol = nyears, nrow = nages)[,h])
+    mujeres <- Pob.ll.vivo(qx = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    pobvivo[h, 1] <- hombres$p65        
+    pobvivo[h, 2] <- mujeres$p65        
+    pobvivo[h, 3] <- hombres$p70        
+    pobvivo[h, 4] <- mujeres$p70        
+    pobvivo[h, 5] <- hombres$p75        
+    pobvivo[h, 6] <- mujeres$p75        
+    #Low
+    hombres.low <- Pob.ll.vivo(qx = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol = nyears, nrow = nages)[,h])
+    mujeres.low <- Pob.ll.vivo(qx = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    pobvivo.low[h, 1] <- hombres.low$p65        
+    pobvivo.low[h, 2] <- mujeres.low$p65        
+    pobvivo.low[h, 3] <- hombres.low$p70        
+    pobvivo.low[h, 4] <- mujeres.low$p70        
+    pobvivo.low[h, 5] <- hombres.low$p75        
+    pobvivo.low[h, 6] <- mujeres.low$p75        
+    #High
+    hombres.high <- Pob.ll.vivo(qx = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol = nyears, nrow = nages)[,h])
+    mujeres.high <- Pob.ll.vivo(qx = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol = nyears, nrow = nages)[,h]) 
+    pobvivo.high[h, 1] <- hombres.high$p65        
+    pobvivo.high[h, 2] <- mujeres.high$p65        
+    pobvivo.high[h, 3] <- hombres.high$p70        
+    pobvivo.high[h, 4] <- mujeres.high$p70        
+    pobvivo.high[h, 5] <- hombres.high$p75        
+    pobvivo.high[h, 6] <- mujeres.high$p75        
+  }
+  pob.llegarvivo_FM[[paste0(pob[i])]] <- pobvivo  
+  pob.llegarvivo_FM.low[[paste0(pob[i])]] <- pobvivo.low  
+  pob.llegarvivo_FM.high[[paste0(pob[i])]] <- pobvivo.high  
+}
+capture.output(pob.llegarvivo_FM, file = "Pobllvivo.FM.txt")
+capture.output(pob.llegarvivo_FM.low, file = "Pobllvivo.FM.low.txt")
+capture.output(pob.llegarvivo_FM.high, file = "Pobllvivo.FM.high.txt")
+
+##########################################################################################
+##########################################################################################
+#CONDITIONAL STANDARD DESVIATION
+con.std.des_FM <- list()
+con.std.des_FM.low <- list()
+con.std.des_FM.high <- list()
+tabl.std <- c("s0hombres", "s0mujeres", "s65hombres", "s65mujeres",  
+              "s70hombres", "s70mujeres", "s75hombres", "s75mujeres")
+edad_media
+i <- 1
+for(i in 1:31){
+  maxyear <- 2020
+  years <- c(2020, 2025, 2030)
+  nyears_fm <- length(years)
+  nyears_dm <- length(seq(min(paises[[i]]$hombres$Year),max(paises[[i]]$hombres$Year),5))
+  nages <- length(edades)
+  std.des <- matrix(NA, nyears_fm, 8, dimnames = list(years, tabl.std))
+  std.des.low <- matrix(NA, nyears_fm, 8, dimnames = list(years, tabl.std))
+  std.des.high <- matrix(NA, nyears_fm, 8, dimnames = list(years, tabl.std))
+  hombres <- mujeres <- NULL
+  hombres.low <- mujeres.low <- NULL
+  hombres.high <- mujeres.high <- NULL
+  mxt_fue_hom <- mxt_fue_muj <- NULL
+  mxt_fue_hom.low <- mxt_fue_muj.low <- NULL
+  mxt_fue_hom.high <- mxt_fue_muj.high <- NULL
+  for(h in 1:nyears_fm){
+    #MEAN
+    hombres <- csdev(qx = matrix(LCfut_mean[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$hombres$ax[,nyears_dm],
+                     mx = datos_mat_fm[[i]]$hombres$mx[,h])
+    mujeres <- csdev(qx = matrix(LCfut_mean[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$mujeres$ax[,nyears_dm],
+                     mx = datos_mat_fm[[i]]$mujeres$mx[,h]) 
+    std.des[h, 1] <- hombres$s0        
+    std.des[h, 2] <- mujeres$s0        
+    std.des[h, 3] <- hombres$s65        
+    std.des[h, 4] <- mujeres$s65        
+    std.des[h, 5] <- hombres$s70        
+    std.des[h, 6] <- mujeres$s70        
+    std.des[h, 7] <- hombres$s75        
+    std.des[h, 8] <- mujeres$s75        
+    #LOW
+    hombres.low <- csdev(qx = matrix(LCfut_low[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$hombres$ax[,nyears_dm],
+                     mx = datos_mat_fm_low[[i]]$hombres$mx[,h])
+    mujeres.low <- csdev(qx = matrix(LCfut_low[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$mujeres$ax[,nyears_dm],
+                     mx = datos_mat_fm_low[[i]]$mujeres$mx[,h]) 
+    std.des.low[h, 1] <- hombres.low$s0        
+    std.des.low[h, 2] <- mujeres.low$s0        
+    std.des.low[h, 3] <- hombres.low$s65        
+    std.des.low[h, 4] <- mujeres.low$s65        
+    std.des.low[h, 5] <- hombres.low$s70        
+    std.des.low[h, 6] <- mujeres.low$s70        
+    std.des.low[h, 7] <- hombres.low$s75        
+    std.des.low[h, 8] <- mujeres.low$s75        
+    #HIGH
+    hombres.high <- csdev(qx = matrix(LCfut_high[[i]]$hombres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$hombres$ax[,nyears_dm],
+                     mx = datos_mat_fm_high[[i]]$hombres$mx[,h])
+    mujeres.high <- csdev(qx = matrix(LCfut_high[[i]]$mujeres$qxtLCfm, ncol = nyears_fm, nrow = nages)[,h],
+                     ax = datos_mat[[i]]$mujeres$ax[,nyears_dm],
+                     mx = datos_mat_fm_high[[i]]$mujeres$mx[,h]) 
+    std.des.high[h, 1] <- hombres.high$s0        
+    std.des.high[h, 2] <- mujeres.high$s0        
+    std.des.high[h, 3] <- hombres.high$s65        
+    std.des.high[h, 4] <- mujeres.high$s65        
+    std.des.high[h, 5] <- hombres.high$s70        
+    std.des.high[h, 6] <- mujeres.high$s70        
+    std.des.high[h, 7] <- hombres.high$s75        
+    std.des.high[h, 8] <- mujeres.high$s75        
+
+  }
+  con.std.des_FM[[paste0(pob[i])]] <- std.des  
+  con.std.des_FM.low[[paste0(pob[i])]] <- std.des.low  
+  con.std.des_FM.high[[paste0(pob[i])]] <- std.des.high  
+}
+capture.output(con.std.des_FM, file = "ConStdDesvi.FM.txt")
+capture.output(con.std.des_FM.low, file = "ConStdDesvi.FM.low.txt")
+capture.output(con.std.des_FM.high, file = "ConStdDesvi.FM.high.txt")
+
+##########################################################################################
+##########################################################################################
+#Por último vamos a proceder a calcular Life Preparancy
+#Edad de preparación para la vida 
+#Ahora una vez que tenemos este valor vamos a proceder a calcular esta variable para todos los paises y sexos 
+Eprep.vida <- list()
+Eprep.vida.low <- list()
+Eprep.vida.high <- list()
+tabl.vida <- c("hage0.50%_hombres", "hage0.50%_mujeres", 
+               "hage65.25%_hombres", "hage65.25%_mujeres")
+for(i in 1:31){
+  maxyear <- 2020
+  years <- c(2020, 2025, 2030)
+  nyears <- length(years)
+  nages <- length(edades)
+  prep.vid <- matrix(NA, nyears, 4, dimnames = list(years, tabl.vida))
+  prep.vid.low <- matrix(NA, nyears, 4, dimnames = list(years, tabl.vida))
+  prep.vid.high <- matrix(NA, nyears, 4, dimnames = list(years, tabl.vida))
+  hombres1 <- mujeres1 <- NULL
+  hombres2 <- mujeres2 <- NULL
+  #LOW
+  hombres1.low <- mujeres1.low <- NULL
+  hombres2.low <- mujeres2.low <- NULL
+  #HIGH
+  hombres1.high <- mujeres1.high <- NULL
+  hombres2.high <- mujeres2.high <- NULL
+  for(h in 1:nyears){
+    hombres1 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 0, z = 0.5)
+    hombres2 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 65, z = 0.25)
+    mujeres1 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 0, z = 0.5)
+    mujeres2 <- Life_preparancy(qxt = matrix(LCfut_mean[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                x = 65, z = 0.25)
+    prep.vid[h, 1] <- hombres1        
+    prep.vid[h, 2] <- mujeres1        
+    prep.vid[h, 3] <- hombres2        
+    prep.vid[h, 4] <- mujeres2        
+    #LOW
+    hombres1.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 0, z = 0.5)
+    hombres2.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 65, z = 0.25)
+    mujeres1.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 0, z = 0.5)
+    mujeres2.low <- Life_preparancy(qxt = matrix(LCfut_low[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                    x = 65, z = 0.25)
+    prep.vid.low[h, 1] <- hombres1.low        
+    prep.vid.low[h, 2] <- mujeres1.low        
+    prep.vid.low[h, 3] <- hombres2.low        
+    prep.vid.low[h, 4] <- mujeres2.low        
+    #HIGH
+    hombres1.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 0, z = 0.5)
+    hombres2.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$hombres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 65, z = 0.25)
+    mujeres1.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 0, z = 0.5)
+    mujeres2.high <- Life_preparancy(qxt = matrix(LCfut_high[[i]]$mujeres$qxt, ncol = nyears, nrow = nages)[,h],
+                                     x = 65, z = 0.25)
+    prep.vid.high[h, 1] <- hombres1.high        
+    prep.vid.high[h, 2] <- mujeres1.high        
+    prep.vid.high[h, 3] <- hombres2.high        
+    prep.vid.high[h, 4] <- mujeres2.high        
+
+  }
+  Eprep.vida[[paste0(pob[i])]] <- prep.vid  
+  Eprep.vida.low[[paste0(pob[i])]] <- prep.vid.low  
+  Eprep.vida.high[[paste0(pob[i])]] <- prep.vid.high  
+}
+capture.output(Eprep.vida, file = "EdadPrepVida.FM.txt")
+capture.output(Eprep.vida.low, file = "EdadPrepVida.FM.low.txt")
+capture.output(Eprep.vida.high, file = "EdadPrepVida.FM.high.txt")
+
+#Vamos a guardar los datos que nos interesan fuera de muesta
+save(esperanzas.fm, esperanzas.fm_low, esperanzas.fm_hig,
+     edad_modal_fm, edad_modal_fm_low, edad_modal_fm_high, 
+     gini.index_FM, gini.index_FM.low, gini.index_FM.high, 
+     pob.llegarvivo_FM, pob.llegarvivo_FM.low, pob.llegarvivo_FM.high,
+     con.std.des_FM, con.std.des_FM.low, con.std.des_FM.high, 
+     Eprep.vida, Eprep.vida.low, Eprep.vida.high, 
+     file = "Indicadores_FM.RData")
+
+
